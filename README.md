@@ -113,5 +113,4 @@ Each ID is generated with a mixture of the date and random number generation. Ea
 I have developed this myself as a fun project, which I will continue to add to as long as I can think of things to add... If you have any issues or feature requests feel free to add an issue. If you have anything to improve this, feel free to add a pull request and I will review it for addition.
 
 ## To Do
-- Add Tests
 - Add query number modifiers ($gt. $gte, $lt, $lte)
