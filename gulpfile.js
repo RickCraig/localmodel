@@ -11,7 +11,9 @@ var paths = {
 
 gulp.task('minify', function() {
   return gulp.src(paths.script)
-    .pipe(uglify())
+    .pipe(uglify({
+      preserveComments: 'some'
+    }))
     .pipe(rename('localmodel.min.js'))
     .pipe(gulp.dest('dist/js'));
 });
