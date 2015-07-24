@@ -46,8 +46,8 @@ Once instanciated you can use it to add models.
 To add a basic model do the following:
 ```javascript
 var human = localmodel.addModel('Human', {
-  name: LocalSchema.String,
-  age: LocalSchema.Number
+  name: LocalSchema.SchemaTypes.String,
+  age: LocalSchema.SchemaTypes.Number
 });
 ```
 LocalSchema currently has 4 types:
@@ -55,7 +55,7 @@ LocalSchema currently has 4 types:
 - Number: 'number'
 - Boolean: 'boolean'
 - Mixed: 'mixed'
-You can use the string ('number') or the static variable (LocalSchema.Number) but make sure when using the string that it's all lowercase and matches the static exactly.
+You can use the string ('number') or the static variable (LocalSchema.LocalSchema.SchemaTypes.Number) but make sure when using the string that it's all lowercase and matches the static exactly.
 
 When adding a model the 'addModel' function returns the created model instance.
 

@@ -3,14 +3,23 @@
 var gulp = require('gulp'),
   jshint = require('gulp-jshint'),
   uglify = require('gulp-uglify'),
-  rename = require('gulp-rename');
+  rename = require('gulp-rename'),
+  jip = require('jasmine-istanbul-phantom');
 
 var paths = {
-  script: 'src/js/localmodel.js'
+  scripts: 'src/js/*.js'
 };
 
+gulp.task('test', function (done) {
+  jip({
+    base: './',
+    spec: 'spec/*.js',
+    callback: done
+  });
+});
+
 gulp.task('minify', function() {
-  return gulp.src(paths.script)
+  return gulp.src(paths.scripts)
     .pipe(uglify({
       preserveComments: 'some'
     }))
