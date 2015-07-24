@@ -101,6 +101,9 @@ LocalSchema.prototype.create = function(data) {
   localStorage.setItem(index, JSON.stringify(newEntry));
   addIndex(this.name, index);
 
+  // Clear indices
+  this.indices = null;
+
   return newEntry;
 };
 
