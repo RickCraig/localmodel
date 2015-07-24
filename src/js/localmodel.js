@@ -51,7 +51,7 @@ var addIndex = function(name, newIndex) {
  */
 var getIndices = function(name) {
   var indices = localStorage.getItem(name + '-index');
-  return indices ? JSON.parse(indices) : [];
+  return JSON.parse(indices);
 };
 
 /**
@@ -71,6 +71,21 @@ var getIndex = function(indices, term) {
   }
   return;
 };
+
+/**
+ * Checks if an object is empty
+ * @private
+ * @param {Object} obj
+ * @returns {Boolean} true if empty
+ */
+var isEmpty = function(obj) {
+  for(var prop in obj) {
+    if(obj.hasOwnProperty(prop)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * Local Schema constructor
@@ -131,7 +146,7 @@ LocalSchema.prototype.findById = function(id) {
   this.indices = this.indices || getIndices(this.name);
   var match = getIndex(this.indices, id);
   if (!match) {
-    return;
+    return null;
   }
   return JSON.parse(localStorage.getItem(match));
 };
@@ -143,6 +158,10 @@ LocalSchema.prototype.findById = function(id) {
  * @returns {Array} an array of matches
  */
 LocalSchema.prototype.find = function(query) {
+  if (!query || isEmpty(query)) {
+    return this.all();
+  }
+
   this.indices = this.indices || getIndices(this.name);
   var results = [];
   for (var i = 0; i < this.indices.length; i++) {
@@ -185,7 +204,7 @@ LocalSchema.SchemaTypes = {
  * @param {Object} options
  */
 
-var LocalModels = function(options) {
+var LocalModel = function(options) {
   this.options = options || {};
   this.models = {};
 };
@@ -197,7 +216,7 @@ var LocalModels = function(options) {
  * @param {Object} schema - the schema for the model
  * @returns {Object} the schema;
  */
-LocalModels.prototype.addModel = function(name, schema) {
+LocalModel.prototype.addModel = function(name, schema) {
   var model = new LocalSchema(name, schema);
   this.models[name] = model;
   return model;
@@ -209,10 +228,10 @@ LocalModels.prototype.addModel = function(name, schema) {
  * @param {String} name - the name of the model
  * @returns {Object} the model schema
  */
-LocalModels.prototype.model = function(name) {
+LocalModel.prototype.model = function(name) {
   if (!this.models[name]) {
-    console.error('The model with name "%s" does not exist.', name);
-    return;
+    console.error('The model with name "' + name + '" does not exist.');
+    return null;
   }
   return this.models[name];
 };
