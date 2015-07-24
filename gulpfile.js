@@ -2,15 +2,17 @@
 
 var gulp = require('gulp'),
   jshint = require('gulp-jshint'),
-  uglify = require('gulp-uglify');
+  uglify = require('gulp-uglify'),
+  rename = require('gulp-rename');
 
 var paths = {
-  scripts: 'src/js/**/*.js'
+  script: 'src/js/localmodel.js'
 };
 
 gulp.task('minify', function() {
-  return gulp.src(paths.scripts)
+  return gulp.src(paths.script)
     .pipe(uglify())
+    .pipe(rename('localmodel.min.js'))
     .pipe(gulp.dest('dist/js'));
 });
 
