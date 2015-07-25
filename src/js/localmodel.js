@@ -92,6 +92,21 @@ var isEmpty = function(obj) {
 };
 
 /**
+ * Checks an array of booleans for a false
+ * @private
+ * @param {Array} arr - an array of booleans
+ * @returns {Boolean} true if contains a false
+ */
+var containsFalse = function(arr) {
+  for (var i = 0; i < arr.length; i++) {
+    if (!arr[i]) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Takes in a data string and returns
  * true if query matches
  * @private
@@ -136,21 +151,6 @@ var matchQuery = function(data, query) {
     }
 
   }
-};
-
-/**
- * Checks an array of booleans for a false
- * @private
- * @param {Array} arr - an array of booleans
- * @returns {Boolean} true if contains a false
- */
-var containsFalse = function(arr) {
-  for (var i = 0; i < arr.length; i++) {
-    if (!arr[i]) {
-      return true;
-    }
-  }
-  return false;
 };
 
 /**
