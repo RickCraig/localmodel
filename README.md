@@ -123,3 +123,4 @@ I have developed this myself as a fun project, which I will continue to add to a
 - Add Populate (similar to Mongoose)
 - Add a basic aggregate function
 - Split off matching to it's own function
+- Add batch update
