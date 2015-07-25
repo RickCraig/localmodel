@@ -1,4 +1,8 @@
-/*! LocalModel | Developer: Rick Craig | https://github.com/RickCraig/localmodel */
+/*!
+ * LocalModel
+ * Developer: Rick Craig
+ * https://github.com/RickCraig/localmodel
+ */
 
 'use strict';
 
@@ -85,7 +89,47 @@ var isEmpty = function(obj) {
     }
   }
   return true;
-}
+};
+
+/**
+ * Takes in a data string and returns
+ * true if query matches
+ * @private
+ * @param {String} data - the string to match
+ * @param {Mixed} query
+ * @returns {Boolean} true if the data matches the query
+ */
+var matchQuery = function(data, query) {
+  // Query using regular expression
+  if (query instanceof RegExp) {
+    return queryItem.test(data);
+  }
+
+  // Query using string
+  if (typeof query === 'string') {
+    return data === query;
+  }
+
+  if (typeof query === 'object') {
+    // Do the business in here for $gte, $gt, $lte, $lt
+    // Remember to tag this 0.0.2
+  }
+};
+
+/**
+ * Checks an array of booleans for a false
+ * @private
+ * @param {Array} arr - an array of booleans
+ * @returns {Boolean} true if contains a false
+ */
+var containsFalse = function(arr) {
+  for (var i = 0; i < arr.length; i++) {
+    if (!arr[i]) {
+      return true;
+    }
+  }
+  return false;
+};
 
 /**
  * Local Schema constructor
@@ -167,19 +211,15 @@ LocalSchema.prototype.find = function(query) {
   for (var i = 0; i < this.indices.length; i++) {
     var entry = localStorage.getItem(this.indices[i]);
     entry = JSON.parse(entry);
-    var matches = false;
+    var matches = [];
 
-    for (var key in entry) {
+    for (var key in query) {
       var queryItem = query[key];
       if (!queryItem) { continue; }
-      if (queryItem instanceof RegExp) {
-        matches = queryItem.test(entry[key]);
-      } else {
-        matches = entry[key] === queryItem;
-      }
+      matches.push(matchQuery(entry[key], queryItem));
     }
 
-    if (matches) {
+    if (!containsFalse(matches)) {
       results.push(entry);
     }
   }
