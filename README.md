@@ -115,3 +115,11 @@ I have developed this myself as a fun project, which I will continue to add to a
 ## To Do
 - Add query number modifiers ($gt, $gte, $lt, $lte)
 - Add a date type
+- Add Delete/Remove
+- Make returned documents instanced (with a save for updating)
+- Add a check for localstorage
+- Add the option of using localsession
+- Add references/relationships to other models
+- Add Populate (similar to Mongoose)
+- Add a basic aggregate function
+- Split off matching to it's own function
