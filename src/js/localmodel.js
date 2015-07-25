@@ -102,7 +102,7 @@ var isEmpty = function(obj) {
 var matchQuery = function(data, query) {
   // Query using regular expression
   if (query instanceof RegExp) {
-    return queryItem.test(data);
+    return query.test(data);
   }
 
   // Query using string
@@ -113,6 +113,28 @@ var matchQuery = function(data, query) {
   if (typeof query === 'object') {
     // Do the business in here for $gte, $gt, $lte, $lt
     // Remember to tag this 0.0.2
+
+    if (typeof data === 'number') {
+      var matches = [];
+      if (query.$gte) {
+        matches.push(query.$gte <= data);
+      }
+
+      if (query.$gt) {
+        matches.push(query.$gt < data);
+      }
+
+      if (query.$lte) {
+        matches.push(query.$lte >= data);
+      }
+
+      if (query.$lt) {
+        matches.push(query.$lt > data);
+      }
+
+      return !containsFalse(matches);
+    }
+
   }
 };
 
