@@ -156,21 +156,6 @@ var matchQuery = function(data, query) {
 };
 
 /**
- * Checks the schema properties for reserved words
- * @private
- * @param {Object} schema
- * @returns {Array} list of matched reserved words
- */
-var hasReserved = function(schema) {
-  var reserved = [];
-  for (var key in schema) {
-    if (LocalDocument.prototype.hasOwnProperty(key))
-      reserved.push(key);
-  }
-  return reserved;
-}
-
-/**
  * Local Document constructor
  * @public
  * @param {Object} data - the entry raw data
@@ -349,16 +334,6 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
-
-  // Do some validation, check for
-  // protected property names
-  var prot = hasReserved(schema);
-  if (prot.length) {
-    console.error('LocalModal: A reserved property has been ' +
-      'used for model ' + name + ': ' + prot);
-    return null;
-  }
-
   var model = new LocalSchema(name, schema);
   this.models[name] = model;
   return model;
