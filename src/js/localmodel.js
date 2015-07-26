@@ -194,8 +194,14 @@ var LocalDocument = function(data, schema) {
  * @public
  */
 LocalDocument.prototype.save = function() {
-  // Save the data
-  // TO DO
+  // Build the object to save
+  var toBeSaved = {};
+  for (var key in this.schema.schema) {
+    toBeSaved[key] = this[key];
+  }
+
+  var itemKey = getKey(this.schema.name, this._id);
+  localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
 };
 
 /**
