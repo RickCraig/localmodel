@@ -60,6 +60,7 @@ LocalSchema currently has 4 types:
 - Boolean: 'boolean'
 - Mixed: 'mixed'
 - Date: 'date'
+
 You can use the string (e.g. 'number', 'boolean') or the static variable (LocalSchema.LocalSchema.SchemaTypes.Number) but make sure when using the string that it's all lowercase and matches the static exactly.
 
 When adding a model the 'addModel' function returns the created model instance.
@@ -110,14 +111,14 @@ var specificHuman = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 ```
 
 ### Using Returned Data
-Data returned from the ```.all()``` and ```.find()``` is returned in an array. Data returned from a ```.findById``` is returned as a single object. Individual objects are instances of ```LocalDocument``` which houses the data saved inside a property named 'data'.
+Data returned from the ```.all()``` and ```.find()``` is returned in an array. Data returned from a ```.findById``` is returned as a single object. Individual objects are instances of ```LocalDocument``` which house the data inside a property named 'data'...
 ```javascript
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 console.log('Rick\'s age is: ' + rick.data.age);
 ```
 
 ### Saving an updated entry
-You can alter a LocalDocument object and save it to save the data to the data store (localStorage) by using the ```.save()``` method.
+You can alter a LocalDocument data object and save it using the ```.save()``` method.
 ```javascript
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 
