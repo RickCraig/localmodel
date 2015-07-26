@@ -154,6 +154,51 @@ var matchQuery = function(data, query) {
 };
 
 /**
+ * Checks the schema properties for reserved words
+ * @private
+ * @param {Object} schema
+ * @returns {Array} list of matched reserved words
+ */
+var hasReserved = function(schema) {
+  var reserved = [];
+  for (var key in schema) {
+    if (LocalDocument.prototype.hasOwnProperty(key))
+      reserved.push(key);
+  }
+  return reserved;
+}
+
+/**
+ * Local Document constructor
+ * @public
+ * @param {Object} data - the entry raw data
+ */
+var LocalDocument = function(data, schema) {
+  this.schema = schema;
+
+  // Try to force the schema type
+  for (var key in data) {
+    var type = schema.schema[key]
+    var property = data[key];
+
+    if (type === LocalSchema.SchemaTypes.Date) {
+      property = new Date(property);
+    }
+
+    this[key] = property;
+  }
+};
+
+/**
+ * Used to save the document when updated
+ * @public
+ */
+LocalDocument.prototype.save = function() {
+  // Save the data
+  // TO DO
+};
+
+/**
  * Local Schema constructor
  * @public
  * @param {Object} schema
@@ -190,6 +235,8 @@ LocalSchema.prototype.create = function(data) {
 
 /**
  * Returns all entries in storage
+ * @public
+ * @returns {Array} all entries
  */
 LocalSchema.prototype.all = function() {
   this.indices = this.indices || getIndices(this.name);
@@ -197,7 +244,7 @@ LocalSchema.prototype.all = function() {
   for (var i = 0; i < this.indices.length; i++) {
     var index = this.indices[i];
     var result = JSON.parse(localStorage.getItem(index));
-    results.push(result);
+    results.push(new LocalDocument(result, this));
   }
   return results;
 };
@@ -214,7 +261,7 @@ LocalSchema.prototype.findById = function(id) {
   if (!match) {
     return null;
   }
-  return JSON.parse(localStorage.getItem(match));
+  return new LocalDocument(JSON.parse(localStorage.getItem(match)), this);
 };
 
 /**
@@ -242,7 +289,7 @@ LocalSchema.prototype.find = function(query) {
     }
 
     if (!containsFalse(matches)) {
-      results.push(entry);
+      results.push(new LocalDocument(entry, this));
     }
   }
   return results;
@@ -257,7 +304,8 @@ LocalSchema.SchemaTypes = {
   String: 'string',
   Number: 'number',
   Boolean: 'boolean',
-  Mixed: 'mixed'
+  Mixed: 'mixed',
+  Date: 'date'
 };
 
 /**
@@ -279,6 +327,16 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
+
+  // Do some validation, check for
+  // protected property names
+  var prot = hasReserved(schema);
+  if (prot.length) {
+    console.error('LocalModal: A reserved property has been ' +
+      'used for model ' + name + ': ' + prot);
+    return null;
+  }
+
   var model = new LocalSchema(name, schema);
   this.models[name] = model;
   return model;
