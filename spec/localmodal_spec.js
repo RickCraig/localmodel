@@ -1,5 +1,7 @@
 'use strict';
 
+localStorage.clear()
+
 describe('model creation', function() {
 
   var localmodel = new LocalModel();
@@ -41,16 +43,17 @@ describe('create', function() {
   });
 
   it('should add an index for the new entry', function() {
+    localStorage.clear();
     var test = model.create({
       name: 'foo'
     });
     var indices = localStorage.getItem('TestCreate-index');
     var parsed = JSON.parse(indices);
     expect(parsed.length).toBe(1);
-    localStorage.clear();
   });
 
   it('should add an entry to localstorage', function() {
+    localStorage.clear();
     var test = model.create({
       name: 'bla'
     });
@@ -58,7 +61,6 @@ describe('create', function() {
     var parsed = JSON.parse(indices);
     var saved = localStorage.getItem(parsed[0]);
     expect(saved).toBe(JSON.stringify(test));
-    localStorage.clear();
   });
 
 });
@@ -71,11 +73,11 @@ describe('all', function() {
   });
 
   it('should return all saved entries for a model', function() {
+    localStorage.clear();
     model.create({ name: 'Billy' });
     model.create({ name: 'Sammy' });
     var results = model.all();
     expect(results.length).toBe(2);
-    localStorage.clear();
   });
 
 });
@@ -88,16 +90,16 @@ describe('findById', function() {
   });
 
   it('should return the exact entry by ID', function() {
+    localStorage.clear();
     var billy = model.create({ name: 'Billy' });
     var result = model.findById(billy._id);
     expect(result.name).toBe('Billy');
-    localStorage.clear();
   });
 
   it('should return null when the ID isn\'t found', function() {
+    localStorage.clear();
     var result = model.findById('1234');
     expect(result).toBe(null);
-    localStorage.clear();
   });
 
 });
@@ -110,15 +112,17 @@ describe('find', function() {
   });
 
   it('should return all matching entries from a query', function() {
+    localStorage.clear();
     model.create({ name: 'Billy' });
     model.create({ name: 'Billy' });
     model.create({ name: 'Sammy' });
     var results = model.find({ name: 'Billy' });
     expect(results.length).toBe(2);
-    localStorage.clear();
+    model.indices = null;
   });
 
-  it('should return and empty array when storage is empty', function() {
+  it('should return an empty array when storage is empty', function() {
+    localStorage.clear();
     var results = model.find({ name: 'Billy' });
     expect(results.length).toBe(0);
     localStorage.clear();
@@ -126,30 +130,30 @@ describe('find', function() {
 
   it('should return all matching entries from a ' +
     'query with regular expression', function() {
+      localStorage.clear();
       model.create({ name: 'Billy' });
       model.create({ name: 'Billy' });
       model.create({ name: 'Sammy' });
       var results = model.find({ name: /Bil/ });
       expect(results.length).toBe(2);
-      localStorage.clear();
     });
 
   it('should return all when the query is missing', function() {
+    localStorage.clear();
     model.create({ name: 'Billy' });
     model.create({ name: 'Billy' });
     model.create({ name: 'Sammy' });
     var results = model.find();
     expect(results.length).toBe(3);
-    localStorage.clear();
   });
 
   it('should return all when the query is empty', function() {
+    localStorage.clear();
     model.create({ name: 'Billy' });
     model.create({ name: 'Billy' });
     model.create({ name: 'Sammy' });
     var results = model.find({});
     expect(results.length).toBe(3);
-    localStorage.clear();
   });
 
 });

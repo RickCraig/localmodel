@@ -151,6 +151,8 @@ var matchQuery = function(data, query) {
     }
 
   }
+
+  return false;
 };
 
 /**
@@ -247,6 +249,12 @@ LocalSchema.prototype.create = function(data) {
 LocalSchema.prototype.all = function() {
   this.indices = this.indices || getIndices(this.name);
   var results = [];
+
+  // Check if the collection is empty
+  if (!this.indices) {
+    return results;
+  }
+
   for (var i = 0; i < this.indices.length; i++) {
     var index = this.indices[i];
     var result = JSON.parse(localStorage.getItem(index));
@@ -283,19 +291,27 @@ LocalSchema.prototype.find = function(query) {
 
   this.indices = this.indices || getIndices(this.name);
   var results = [];
+
+  // Check if the collection is empty
+  if (!this.indices) {
+    return results;
+  }
+
   for (var i = 0; i < this.indices.length; i++) {
     var entry = localStorage.getItem(this.indices[i]);
-    entry = JSON.parse(entry);
+    var parsed = JSON.parse(entry);
     var matches = [];
 
     for (var key in query) {
       var queryItem = query[key];
       if (!queryItem) { continue; }
-      matches.push(matchQuery(entry[key], queryItem));
+      if (parsed[key]) {
+        matches.push(matchQuery(parsed[key], queryItem));
+      }
     }
 
     if (!containsFalse(matches)) {
-      results.push(new LocalDocument(entry, this));
+      results.push(new LocalDocument(parsed, this));
     }
   }
   return results;
