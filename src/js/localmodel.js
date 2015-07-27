@@ -120,10 +120,11 @@ var matchQuery = function(data, query) {
     return query.test(data);
   }
 
-  // Query using string
-  if (typeof query === 'string') {
-    return data === query;
-  }
+  // Query using string or number
+  if (typeof query === 'string' ||
+    typeof query === 'number') {
+      return data === query;
+    }
 
   if (typeof query === 'object') {
     // Do the business in here for $gte, $gt, $lte, $lt
@@ -151,8 +152,6 @@ var matchQuery = function(data, query) {
     }
 
   }
-
-  return false;
 };
 
 /**
@@ -162,6 +161,8 @@ var matchQuery = function(data, query) {
  */
 var LocalDocument = function(data, schema) {
   this.schema = schema;
+  this.data = {};
+  this.indexKey = getKey(schema.name, data._id);
 
   // Try to force the schema type
   for (var key in data) {
@@ -172,7 +173,7 @@ var LocalDocument = function(data, schema) {
       property = new Date(property);
     }
 
-    this[key] = property;
+    this.data[key] = property;
   }
 };
 
@@ -184,10 +185,10 @@ LocalDocument.prototype.save = function() {
   // Build the object to save
   var toBeSaved = {};
   for (var key in this.schema.schema) {
-    toBeSaved[key] = this[key];
+    toBeSaved[key] = this.data[key];
   }
 
-  var itemKey = getKey(this.schema.name, this._id);
+  var itemKey = getKey(this.schema.name, this.data._id);
   localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
 };
 
@@ -223,7 +224,7 @@ LocalSchema.prototype.create = function(data) {
   // Clear indices
   this.indices = null;
 
-  return newEntry;
+  return new LocalDocument(newEntry, this);
 };
 
 /**
@@ -289,7 +290,12 @@ LocalSchema.prototype.find = function(query) {
 
     for (var key in query) {
       var queryItem = query[key];
-      if (queryItem == '' || isEmpty(queryItem)) { continue; }
+      var isRegex = queryItem instanceof RegExp;
+      if (!isRegex &&
+        (queryItem === '' || isEmpty(queryItem))) {
+        continue;
+      }
+
       if (parsed[key]) {
         matches.push(matchQuery(parsed[key], queryItem));
       }
