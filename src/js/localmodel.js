@@ -166,7 +166,7 @@ var LocalDocument = function(data, schema) {
 
   // Try to force the schema type
   for (var key in data) {
-    var type = schema.schema[key]
+    var type = schema.schema[key];
     var property = data[key];
 
     if (type === LocalSchema.SchemaTypes.Date) {
