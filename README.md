@@ -162,3 +162,4 @@ v0.0.2:
 - Add a basic aggregate function
 - Split off matching to it's own function
 - Add batch update
+- Add Count helper
