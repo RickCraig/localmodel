@@ -52,7 +52,7 @@ gulp.task('bump-major', function() {
 });
 
 gulp.task('tag', function() {
-  return gulp.src(scripts.packages[0])
+  return gulp.src(paths.packages[0])
     .pipe(tag());
 });
 
