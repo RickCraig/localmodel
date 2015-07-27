@@ -36,6 +36,8 @@ This will cover the basic usage of LocalModel:
 - [All](#all)
 - [Find](#find)
 - [Find By ID](#find-by-id)
+- [Using returned data](#using-returned-data)
+- [Saving an updated entry](#saving-an-updated-entry)
 
 ### Basic Setup
 LocalModel needs to be instantiated. At the moment there are no options to pass:
@@ -57,7 +59,9 @@ LocalSchema currently has 4 types:
 - Number: 'number'
 - Boolean: 'boolean'
 - Mixed: 'mixed'
-You can use the string ('number') or the static variable (LocalSchema.LocalSchema.SchemaTypes.Number) but make sure when using the string that it's all lowercase and matches the static exactly.
+- Date: 'date'
+
+You can use the string (e.g. 'number', 'boolean') or the static variable (LocalSchema.LocalSchema.SchemaTypes.Number) but make sure when using the string that it's all lowercase and matches the static exactly.
 
 When adding a model the 'addModel' function returns the created model instance.
 
@@ -106,19 +110,49 @@ If you have the ID of the entry you can quickly find it with ```findById(ID)```.
 var specificHuman = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 ```
 
+### Using Returned Data
+Data returned from the ```.all()``` and ```.find()``` is returned in an array. Data returned from a ```.findById``` is returned as a single object. Individual objects are instances of ```LocalDocument``` which house the data inside a property named 'data'...
+```javascript
+var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
+console.log('Rick\'s age is: ' + rick.data.age);
+```
+
+### Saving an updated entry
+You can alter a LocalDocument data object and save it using the ```.save()``` method.
+```javascript
+var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
+
+// Change the age and save it
+rick.data.age = 32;
+rick.save();
+```
+
 ## ID Generation
 Each ID is generated with a mixture of the date and random number generation. Each ID will be unique and can be accessed by the ```_id``` property.
 
 ## Contribution
 I have developed this myself as a fun project, which I will continue to add to as long as I can think of things to add... If you have any issues or feature requests feel free to add an issue. If you have anything to improve this, feel free to add a pull request and I will review it for addition.
 
-## Change Log
+## Testing
+Tests are run using jasmine. This project uses gulp as it's build tool.
+```
+npm test
+```
+or
+```
+gulp test
+```
 
+## Change Log
+v0.1.0:
+- Added instanced data
+- Added save to data instance for updated
+- Added the Date schema type
 v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add a date type
+- Add property defaults
 - Add Delete/Remove
 - Make returned documents instanced (with a save for updating)
 - Add a check for localstorage
@@ -128,3 +162,4 @@ v0.0.2:
 - Add a basic aggregate function
 - Split off matching to it's own function
 - Add batch update
+- Add Count helper
