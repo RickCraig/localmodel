@@ -153,6 +153,7 @@ v0.0.2:
 
 ## To Do
 - Add property defaults
+- Add query date modifiers ($gt, $gte, $lt, $lte)
 - Add Delete/Remove
 - Make returned documents instanced (with a save for updating)
 - Add a check for localstorage
