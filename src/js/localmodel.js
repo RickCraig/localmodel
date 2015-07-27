@@ -289,7 +289,7 @@ LocalSchema.prototype.find = function(query) {
 
     for (var key in query) {
       var queryItem = query[key];
-      if (!queryItem) { continue; }
+      if (queryItem == '' || isEmpty(queryItem)) { continue; }
       if (parsed[key]) {
         matches.push(matchQuery(parsed[key], queryItem));
       }
