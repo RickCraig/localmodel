@@ -7,6 +7,36 @@
 'use strict';
 
 /**
+ * Checks if an object is empty
+ * @private
+ * @param {Object} obj
+ * @returns {Boolean} true if empty
+ */
+var isEmpty = function(obj) {
+  for(var prop in obj) {
+    if(obj.hasOwnProperty(prop)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Checks an array of booleans for a false
+ * @private
+ * @param {Array} arr - an array of booleans
+ * @returns {Boolean} true if contains a false
+ */
+var containsFalse = function(arr) {
+  for (var i = 0; i < arr.length; i++) {
+    if (!arr[i]) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Generates a random UUID
  * @private
  * @returns {String} random id
@@ -77,84 +107,6 @@ var getIndex = function(indices, term) {
 };
 
 /**
- * Checks if an object is empty
- * @private
- * @param {Object} obj
- * @returns {Boolean} true if empty
- */
-var isEmpty = function(obj) {
-  for(var prop in obj) {
-    if(obj.hasOwnProperty(prop)) {
-      return false;
-    }
-  }
-  return true;
-};
-
-/**
- * Checks an array of booleans for a false
- * @private
- * @param {Array} arr - an array of booleans
- * @returns {Boolean} true if contains a false
- */
-var containsFalse = function(arr) {
-  for (var i = 0; i < arr.length; i++) {
-    if (!arr[i]) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/**
- * Takes in a data string and returns
- * true if query matches
- * @private
- * @param {String} data - the string to match
- * @param {Mixed} query
- * @returns {Boolean} true if the data matches the query
- */
-var matchQuery = function(data, query) {
-  // Query using regular expression
-  if (query instanceof RegExp) {
-    return query.test(data);
-  }
-
-  // Query using string or number
-  if (typeof query === 'string' ||
-    typeof query === 'number') {
-      return data === query;
-    }
-
-  if (typeof query === 'object') {
-    // Do the business in here for $gte, $gt, $lte, $lt
-    // Remember to tag this 0.0.2
-
-    if (typeof data === 'number') {
-      var matches = [];
-      if (query.$gte) {
-        matches.push(query.$gte <= data);
-      }
-
-      if (query.$gt) {
-        matches.push(query.$gt < data);
-      }
-
-      if (query.$lte) {
-        matches.push(query.$lte >= data);
-      }
-
-      if (query.$lt) {
-        matches.push(query.$lt > data);
-      }
-
-      return !containsFalse(matches);
-    }
-
-  }
-};
-
-/**
  * Local Document constructor
  * @public
  * @param {Object} data - the entry raw data
@@ -190,6 +142,43 @@ LocalDocument.prototype.save = function() {
 
   var itemKey = getKey(this.schema.name, this.data._id);
   localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
+};
+
+/**
+ * LocalModel constructor
+ * @public
+ * @param {Object} options
+ */
+var LocalModel = function(options) {
+  this.options = options || {};
+  this.models = {};
+};
+
+/**
+ * Adds a model schema to the list of models
+ * @public
+ * @param {String} name - the name of the model
+ * @param {Object} schema - the schema for the model
+ * @returns {Object} the schema;
+ */
+LocalModel.prototype.addModel = function(name, schema) {
+  var model = new LocalSchema(name, schema);
+  this.models[name] = model;
+  return model;
+};
+
+/**
+ * Returns the schema for the model by name
+ * @public
+ * @param {String} name - the name of the model
+ * @returns {Object} the model schema
+ */
+LocalModel.prototype.model = function(name) {
+  if (!this.models[name]) {
+    console.error('The model with name "' + name + '" does not exist.');
+    return null;
+  }
+  return this.models[name];
 };
 
 /**
@@ -323,38 +312,49 @@ LocalSchema.SchemaTypes = {
 };
 
 /**
- * LocalModel constructor
- * @public
- * @param {Object} options
+ * Takes in a data string and returns
+ * true if query matches
+ * @private
+ * @param {String} data - the string to match
+ * @param {Mixed} query
+ * @returns {Boolean} true if the data matches the query
  */
-var LocalModel = function(options) {
-  this.options = options || {};
-  this.models = {};
-};
-
-/**
- * Adds a model schema to the list of models
- * @public
- * @param {String} name - the name of the model
- * @param {Object} schema - the schema for the model
- * @returns {Object} the schema;
- */
-LocalModel.prototype.addModel = function(name, schema) {
-  var model = new LocalSchema(name, schema);
-  this.models[name] = model;
-  return model;
-};
-
-/**
- * Returns the schema for the model by name
- * @public
- * @param {String} name - the name of the model
- * @returns {Object} the model schema
- */
-LocalModel.prototype.model = function(name) {
-  if (!this.models[name]) {
-    console.error('The model with name "' + name + '" does not exist.');
-    return null;
+var matchQuery = function(data, query) {
+  // Query using regular expression
+  if (query instanceof RegExp) {
+    return query.test(data);
   }
-  return this.models[name];
+
+  // Query using string or number
+  if (typeof query === 'string' ||
+    typeof query === 'number') {
+      return data === query;
+    }
+
+  if (typeof query === 'object') {
+    // Do the business in here for $gte, $gt, $lte, $lt
+    // Remember to tag this 0.0.2
+
+    if (typeof data === 'number') {
+      var matches = [];
+      if (query.$gte) {
+        matches.push(query.$gte <= data);
+      }
+
+      if (query.$gt) {
+        matches.push(query.$gt < data);
+      }
+
+      if (query.$lte) {
+        matches.push(query.$lte >= data);
+      }
+
+      if (query.$lt) {
+        matches.push(query.$lt > data);
+      }
+
+      return !containsFalse(matches);
+    }
+
+  }
 };
