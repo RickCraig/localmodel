@@ -6,6 +6,7 @@ var gulp = require('gulp'),
   rename = require('gulp-rename'),
   bump = require('gulp-bump'),
   tag = require('gulp-tag-version'),
+  concat = require('gulp-concat'),
   runSequence = require('run-sequence'),
   jip = require('jasmine-istanbul-phantom');
 
@@ -24,8 +25,14 @@ gulp.task('test', function (done) {
   });
 });
 
-gulp.task('minify', function() {
+gulp.task('concat', function() {
   return gulp.src(paths.scripts)
+    .pipe(concat('localmodel.js'))
+    .pipe(gulp.dest('dist/js'));
+});
+
+gulp.task('minify', function() {
+  return gulp.src('dist/js/localmodel.js')
     .pipe(uglify({
       preserveComments: 'some'
     }))
@@ -57,29 +64,30 @@ gulp.task('tag', function() {
 });
 
 gulp.task('release', function() {
-  runSequence('lint', 'test', 'minify', 'tag');
+  runSequence('concat', 'lint', 'test', 'concat', 'minify');
 });
 
 gulp.task('release-patch', function() {
-  runSequence('lint', 'test', ['bump-patch', 'minify'], 'tag');
+  runSequence('concat', 'lint', 'test', 'concat', ['bump-patch', 'minify'], 'tag');
 });
 
 gulp.task('release-minor', function() {
-  runSequence('lint', 'test', ['bump-patch', 'minify'], 'tag');
+  runSequence('concat', 'lint', 'test', 'concat', ['bump-patch', 'minify'], 'tag');
 });
 
 gulp.task('release-major', function() {
-  runSequence('lint', 'test', ['bump-patch', 'minify'], 'tag');
+  runSequence('concat', 'lint', 'test',['bump-patch', 'minify'], 'tag');
 });
 
 gulp.task('lint', function() {
-  return gulp.src([paths.scripts])
+  return gulp.src('dist/js/localmodel.js')
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'));
 });
 
 gulp.task('watch', function() {
-  gulp.watch(paths.scripts, ['lint']);
+  gulp.watch(paths.scripts, ['concat']);
+  gulp.watch('dist/js/localmodel.js', ['lint']);
 });
 
 gulp.task('default', ['watch', 'lint']);
