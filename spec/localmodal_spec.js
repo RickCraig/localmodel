@@ -249,6 +249,7 @@ describe('Save', function() {
     var parsed = JSON.parse(indices);
     var saved = localStorage.getItem(parsed[0]);
     saved = JSON.parse(saved);
+    console.log(saved.age);
     expect(saved.age).toBe(35);
   });
 
@@ -274,10 +275,57 @@ describe('Generic LocalDocument', function() {
   });
 
   it('should parse a date when type is date', function() {
+
     var first = model.create({ created: Date.now() });
     var searched = model.findById(first.data._id);
     expect(searched.data.created instanceof Date).toBe(true);
   });
 
+  it('should set the type to string when type is missing', function() {
+    localStorage.clear();
+    var testModel = localmodel.addModel('TestDefaultType', {
+      test: {}
+    });
+    var first = testModel.create({ test: 'foo' });
+    var searched = testModel.findById(first.data._id);
+    expect(typeof searched.data.test).toBe('string');
+  });
+
+});
+
+describe('Default values', function() {
+
+  var localmodel = new LocalModel();
+  var model = localmodel.addModel('TestDefault', {
+    name: { type: LocalSchema.SchemaTypes.String, default: 'Billy' }
+  });
+
+  it('should create the entry with the default when the value is missing', function() {
+    localStorage.clear();
+    model.create({});
+    var indices = localStorage.getItem('TestDefault-index');
+    var parsed = JSON.parse(indices);
+    var saved = localStorage.getItem(parsed[0]);
+    saved = JSON.parse(saved);
+    expect(saved.name).toBe('Billy');
+  });
+
+  it('should create the entry with the value when it\'s present', function() {
+    localStorage.clear();
+    model.create({ name: 'Sammy' });
+    var indices = localStorage.getItem('TestDefault-index');
+    var parsed = JSON.parse(indices);
+    var saved = localStorage.getItem(parsed[0]);
+    saved = JSON.parse(saved);
+    expect(saved.name).toBe('Sammy');
+  });
+
+  it('should display the default even if it wasn\t saved with it', function() {
+    localStorage.clear();
+    var sammy = model.create({ name: 'Sammy' });
+    model.schema['age'] = { type: LocalSchema.SchemaTypes.Number, default: 10 };
+    var searched = model.findById(sammy.data._id);
+    expect(searched.data.age).toBe(10);
+  });
 });
 
