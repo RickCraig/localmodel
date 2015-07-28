@@ -65,6 +65,23 @@ You can use the string (e.g. 'number', 'boolean') or the static variable (LocalS
 
 When adding a model the 'addModel' function returns the created model instance.
 
+#### Default Values
+You can add a default value to a property when adding the model like so:
+```javascript
+var human = localmodel.addModel({
+  name: LocalSchema.SchemaTypes.String,
+  isAlive: { type: LocalSchema.SchemaTypes.Boolean, default: true }
+});
+```
+This will set the isAlive property to true by default, this will simply be overwritten when the isAlive property is given a value:
+```javascript
+var sammy = human.create({ name: 'Sammy' });
+console.log(sammy.data.isAlive); // true
+
+var billy = human.create({ name: 'Billy', isAlive: false });
+console.log(billy.data.isAlive); // false
+```
+
 ### Getting a model
 If you ever need to retrieve a model instance you can call the following:
 ```javascript
