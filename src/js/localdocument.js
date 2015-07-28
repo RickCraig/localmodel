@@ -8,16 +8,40 @@ var LocalDocument = function(data, schema) {
   this.data = {};
   this.indexKey = getKey(schema.name, data._id);
 
+  // Add ID
+  if (data._id) {
+    this.data._id = data._id;
+  }
+
   // Try to force the schema type
-  for (var key in data) {
-    var type = schema.schema[key];
+  for (var key in schema.schema) {
+    var type;
     var property = data[key];
 
-    if (type === LocalSchema.SchemaTypes.Date) {
+    if (typeof schema.schema[key] === 'object') {
+
+      // Get the type
+      if (!schema.schema[key].type) {
+        type = LocalSchema.SchemaTypes.String;
+      } else {
+        type = schema.schema[key].type;
+      }
+
+      // Set the default if it exists
+      if (schema.schema[key].default && !property) {
+        property = schema.schema[key].default;
+      }
+    } else {
+      type = schema.schema[key];
+    }
+
+    if (property && type === LocalSchema.SchemaTypes.Date) {
       property = new Date(property);
     }
 
-    this.data[key] = property;
+    if (property) {
+      this.data[key] = property;
+    }
   }
 };
 
@@ -32,6 +56,7 @@ LocalDocument.prototype.save = function() {
     toBeSaved[key] = this.data[key];
   }
 
+  console.log(toBeSaved);
   var itemKey = getKey(this.schema.name, this.data._id);
   localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
 };
