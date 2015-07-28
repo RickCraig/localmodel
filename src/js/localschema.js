@@ -18,7 +18,11 @@ LocalSchema.prototype.create = function(data) {
   var newEntry = {};
   newEntry._id = generateUUID();
   for (var key in this.schema) {
-    newEntry[key] = data[key];
+    var value = data[key];
+    if (!value && this.schema[key].default) {
+      value = this.schema[key].default;
+    }
+    newEntry[key] = value;
   }
 
   // Save to localstorage
@@ -112,6 +116,7 @@ LocalSchema.prototype.find = function(query) {
       results.push(new LocalDocument(parsed, this));
     }
   }
+
   return results;
 };
 
