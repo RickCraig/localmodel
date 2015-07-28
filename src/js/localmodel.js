@@ -246,6 +246,7 @@ LocalSchema.prototype.all = function() {
     var result = JSON.parse(localStorage.getItem(index));
     results.push(new LocalDocument(result, this));
   }
+
   return results;
 };
 
@@ -326,7 +327,6 @@ LocalSchema.SchemaTypes = {
  * @public
  * @param {Object} options
  */
-
 var LocalModel = function(options) {
   this.options = options || {};
   this.models = {};
