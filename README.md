@@ -38,7 +38,7 @@ This will cover the basic usage of LocalModel:
 - [Find By ID](#find-by-id)
 - [Using returned data](#using-returned-data)
 - [Saving an updated entry](#saving-an-updated-entry)
-- [Removing/Deleting](#removing-deleting)
+- [Removing/Deleting](#removingdeleting)
 
 ### Basic Setup
 LocalModel needs to be instantiated. At the moment there are no options to pass:
