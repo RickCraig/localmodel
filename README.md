@@ -38,6 +38,7 @@ This will cover the basic usage of LocalModel:
 - [Find By ID](#find-by-id)
 - [Using returned data](#using-returned-data)
 - [Saving an updated entry](#saving-an-updated-entry)
+- [Removing/Deleting](#removing-deleting)
 
 ### Basic Setup
 LocalModel needs to be instantiated. At the moment there are no options to pass:
@@ -164,6 +165,19 @@ var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 // Change the age and save it
 rick.data.age = 32;
 rick.save();
+```
+
+### Removing/Deleting
+You can remove an entry individually:
+```javascript
+// Remove rick, no one likes him anyway...
+var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
+rick.remove();
+```
+or you can remove multiple entries using the same query mechanism as find from the model:
+```javascript
+// Remove all entries with age = 16
+human.remove({ age: 16 });
 ```
 
 ## ID Generation
