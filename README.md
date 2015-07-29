@@ -121,6 +121,28 @@ var partialMatches = human.find({
 });
 ```
 
+#### $gte, $gt, $lte, $lt
+You can use a more advanced query to get numbers and dates that are greater than or equal, greater than, less than or equal and less than:
+```javascript
+// Find with age greater than or equal to 25
+var humans = human.find({ age: { $gte: 25 } });
+
+// Find with age greater than 30
+var humans = human.find({ age: { $gt: 30 } });
+
+// Find with age less than or equal to 45
+var humans = human.find({ age: { $lte: 45 } });
+
+// Find with age less than to 50
+var humans = human.find({ age: { $lt: 50 } });
+
+// Find with age less than to 50 but greater than 20
+var humans = human.find({ age: { $lt: 50, $gt: 20 } });
+
+// Find all with a created date between 2010 and now
+var human = human.find({ created: { $lte: new Date(), $gte: new Date(2010, 1, 1) } });
+```
+
 ### Find By ID
 If you have the ID of the entry you can quickly find it with ```findById(ID)```.
 ```javascript
@@ -161,6 +183,9 @@ gulp test
 ```
 
 ## Change Log
+v0.1.2:
+- Add query date modifiers ($gt, $gte, $lt, $lte)
+
 v0.1.1:
 - Add property defaults
 
@@ -173,9 +198,7 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add query date modifiers ($gt, $gte, $lt, $lte)
 - Add Delete/Remove
-- Make returned documents instanced (with a save for updating)
 - Add a check for localstorage
 - Add the option of using localsession
 - Add references/relationships to other models

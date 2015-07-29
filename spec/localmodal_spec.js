@@ -194,13 +194,14 @@ describe('Match object', function() {
 
   var localmodel = new LocalModel();
   var model = localmodel.addModel('TestMatch', {
-    age: LocalSchema.SchemaTypes.Number
+    age: LocalSchema.SchemaTypes.Number,
+    created: LocalSchema.SchemaTypes.Date
   });
   var addDummies = function() {
-    model.create({ age: 31 });
-    model.create({ age: 25 });
-    model.create({ age: 15 });
-    model.create({ age: 11 });
+    model.create({ age: 31, created: new Date() });
+    model.create({ age: 25, created: new Date(2012, 8, 1) });
+    model.create({ age: 15, created: new Date(2002, 8, 1) });
+    model.create({ age: 11, created: new Date(1999, 8, 1) });
   };
 
   it('should return a number greater than or equal when using $gte', function() {
@@ -228,6 +229,35 @@ describe('Match object', function() {
     localStorage.clear();
     addDummies();
     var results = model.find({ age: { $lt: 25 } });
+    expect(results.length).toBe(2);
+  });
+
+  // Dates
+  it('should return a date greater than or equal when using $gte', function() {
+    localStorage.clear();
+    addDummies();
+    var results = model.find({ created: { $gte: new Date(2012, 8, 1) } });
+    expect(results.length).toBe(2);
+  });
+
+  it('should return a date greater than when using $gt', function() {
+    localStorage.clear();
+    addDummies();
+    var results = model.find({ created: { $gt: new Date(2012, 8, 1) } });
+    expect(results.length).toBe(1);
+  });
+
+  it('should return a date less than or equal when using $lte', function() {
+    localStorage.clear();
+    addDummies();
+    var results = model.find({ created: { $lte: new Date(2012, 8, 1) } });
+    expect(results.length).toBe(3);
+  });
+
+  it('should return a date less than when using $lt', function() {
+    localStorage.clear();
+    addDummies();
+    var results = model.find({ created: { $lt: new Date(2012, 8, 1) } });
     expect(results.length).toBe(2);
   });
 

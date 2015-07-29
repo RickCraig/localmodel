@@ -15,34 +15,44 @@ var LocalDocument = function(data, schema) {
 
   // Try to force the schema type
   for (var key in schema.schema) {
-    var type;
     var property = data[key];
 
-    if (typeof schema.schema[key] === 'object') {
-
-      // Get the type
-      if (!schema.schema[key].type) {
-        type = LocalSchema.SchemaTypes.String;
-      } else {
-        type = schema.schema[key].type;
-      }
-
-      // Set the default if it exists
-      if (schema.schema[key].default && !property) {
-        property = schema.schema[key].default;
-      }
-    } else {
-      type = schema.schema[key];
-    }
-
-    if (property && type === LocalSchema.SchemaTypes.Date) {
-      property = new Date(property);
-    }
+    property = LocalDocument.convert(key, property, schema.schema);
 
     if (property) {
       this.data[key] = property;
     }
   }
+};
+
+/**
+ * Forces the types
+ * @param
+ */
+LocalDocument.convert = function(key, property, schema) {
+  var type;
+  if (typeof schema[key] === 'object') {
+
+    // Get the type
+    if (!schema[key].type) {
+      type = LocalSchema.SchemaTypes.String;
+    } else {
+      type = schema[key].type;
+    }
+
+    // Set the default if it exists
+    if (schema[key].default && !property) {
+      property = schema[key].default;
+    }
+  } else {
+    type = schema[key];
+  }
+
+  if (property && type === LocalSchema.SchemaTypes.Date) {
+    property = new Date(property);
+  }
+
+  return property;
 };
 
 /**

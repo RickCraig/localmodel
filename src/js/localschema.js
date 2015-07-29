@@ -108,7 +108,12 @@ LocalSchema.prototype.find = function(query) {
       }
 
       if (parsed[key]) {
-        matches.push(matchQuery(parsed[key], queryItem));
+        matches.push(matchQuery(
+          LocalDocument.convert(key, parsed[key], this.schema),
+          queryItem
+        ));
+      } else {
+        matches.push(false);
       }
     }
 
