@@ -197,6 +197,10 @@ gulp test
 ```
 
 ## Change Log
+v0.2.0:
+- Add Delete/Remove
+- Add a check for localstorage
+
 v0.1.2:
 - Add query date modifiers ($gt, $gte, $lt, $lte)
 
@@ -212,8 +216,6 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add Delete/Remove
-- Add a check for localstorage
 - Add the option of using localsession
 - Add references/relationships to other models
 - Add Populate (similar to Mongoose)
