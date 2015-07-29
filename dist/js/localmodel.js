@@ -123,34 +123,44 @@ var LocalDocument = function(data, schema) {
 
   // Try to force the schema type
   for (var key in schema.schema) {
-    var type;
     var property = data[key];
 
-    if (typeof schema.schema[key] === 'object') {
-
-      // Get the type
-      if (!schema.schema[key].type) {
-        type = LocalSchema.SchemaTypes.String;
-      } else {
-        type = schema.schema[key].type;
-      }
-
-      // Set the default if it exists
-      if (schema.schema[key].default && !property) {
-        property = schema.schema[key].default;
-      }
-    } else {
-      type = schema.schema[key];
-    }
-
-    if (property && type === LocalSchema.SchemaTypes.Date) {
-      property = new Date(property);
-    }
+    property = LocalDocument.convert(key, property, schema.schema);
 
     if (property) {
       this.data[key] = property;
     }
   }
+};
+
+/**
+ * Forces the types
+ * @param
+ */
+LocalDocument.convert = function(key, property, schema) {
+  var type;
+  if (typeof schema[key] === 'object') {
+
+    // Get the type
+    if (!schema[key].type) {
+      type = LocalSchema.SchemaTypes.String;
+    } else {
+      type = schema[key].type;
+    }
+
+    // Set the default if it exists
+    if (schema[key].default && !property) {
+      property = schema[key].default;
+    }
+  } else {
+    type = schema[key];
+  }
+
+  if (property && type === LocalSchema.SchemaTypes.Date) {
+    property = new Date(property);
+  }
+
+  return property;
 };
 
 /**
@@ -316,7 +326,12 @@ LocalSchema.prototype.find = function(query) {
       }
 
       if (parsed[key]) {
-        matches.push(matchQuery(parsed[key], queryItem));
+        matches.push(matchQuery(
+          LocalDocument.convert(key, parsed[key], this.schema),
+          queryItem
+        ));
+      } else {
+        matches.push(false);
       }
     }
 
@@ -350,6 +365,7 @@ LocalSchema.SchemaTypes = {
  * @returns {Boolean} true if the data matches the query
  */
 var matchQuery = function(data, query) {
+
   // Query using regular expression
   if (query instanceof RegExp) {
     return query.test(data);
@@ -365,25 +381,48 @@ var matchQuery = function(data, query) {
     // Do the business in here for $gte, $gt, $lte, $lt
     // Remember to tag this 0.0.2
 
+
     if (typeof data === 'number') {
-      var matches = [];
+      var numberMatches = [];
       if (query.$gte) {
-        matches.push(query.$gte <= data);
+        numberMatches.push(query.$gte <= data);
       }
 
       if (query.$gt) {
-        matches.push(query.$gt < data);
+        numberMatches.push(query.$gt < data);
       }
 
       if (query.$lte) {
-        matches.push(query.$lte >= data);
+        numberMatches.push(query.$lte >= data);
       }
 
       if (query.$lt) {
-        matches.push(query.$lt > data);
+        numberMatches.push(query.$lt > data);
       }
 
-      return !containsFalse(matches);
+      return !containsFalse(numberMatches);
+    }
+
+    if (data instanceof Date) {
+      var dateMatches = [];
+
+      if (query.$gte) {
+        dateMatches.push(new Date(query.$gte) <= data);
+      }
+
+      if (query.$gt) {
+        dateMatches.push(new Date(query.$gt) < data);
+      }
+
+      if (query.$lte) {
+        dateMatches.push(new Date(query.$lte) >= data);
+      }
+
+      if (query.$lt) {
+        dateMatches.push(new Date(query.$lt) > data);
+      }
+
+      return !containsFalse(dateMatches);
     }
 
   }
