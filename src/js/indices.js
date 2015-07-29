@@ -67,3 +67,20 @@ var getIndex = function(indices, term) {
   }
   return;
 };
+
+/**
+ * Removes an index from indices
+ * @private
+ * @param {String} model
+ * @param {String} key
+ */
+var removeIndex = function(model, key) {
+  var indices = getIndices(model);
+  var index = indices.indexOf(key);
+  if (index > -1) {
+    indices.splice(index, 1);
+    localStorage.setItem(model + '-index', JSON.stringify(indices));
+  } else {
+    console.error(new Error('The key "' + key + '" doesn\'t exist'));
+  }
+};
