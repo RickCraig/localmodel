@@ -132,7 +132,7 @@ LocalSchema.prototype.remove = function(query) {
   for (var i = 0; i < entries.length; i++ ) {
     entries[i].remove();
   }
-}
+};
 
 /**
  * LocalSchema Schema Types
