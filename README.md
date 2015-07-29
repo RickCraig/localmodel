@@ -161,6 +161,8 @@ gulp test
 ```
 
 ## Change Log
+v0.1.1:
+- Add property defaults
 v0.1.0:
 - Added instanced data
 - Added save to data instance for updated
@@ -169,7 +171,6 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add property defaults
 - Add query date modifiers ($gt, $gte, $lt, $lte)
 - Add Delete/Remove
 - Make returned documents instanced (with a save for updating)
