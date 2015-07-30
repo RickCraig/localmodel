@@ -38,6 +38,7 @@ This will cover the basic usage of LocalModel:
 - [Find By ID](#find-by-id)
 - [Using returned data](#using-returned-data)
 - [Saving an updated entry](#saving-an-updated-entry)
+- [Removing/Deleting](#removingdeleting)
 
 ### Basic Setup
 LocalModel needs to be instantiated. At the moment there are no options to pass:
@@ -166,6 +167,19 @@ rick.data.age = 32;
 rick.save();
 ```
 
+### Removing/Deleting
+You can remove an entry individually:
+```javascript
+// Remove rick, no one likes him anyway...
+var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
+rick.remove();
+```
+or you can remove multiple entries using the same query mechanism as find from the model:
+```javascript
+// Remove all entries with age = 16
+human.remove({ age: 16 });
+```
+
 ## ID Generation
 Each ID is generated with a mixture of the date and random number generation. Each ID will be unique and can be accessed by the ```_id``` property.
 
@@ -183,6 +197,10 @@ gulp test
 ```
 
 ## Change Log
+v0.2.0:
+- Add Delete/Remove
+- Add a check for localstorage
+
 v0.1.2:
 - Add query date modifiers ($gt, $gte, $lt, $lte)
 
@@ -198,8 +216,6 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add Delete/Remove
-- Add a check for localstorage
 - Add the option of using localsession
 - Add references/relationships to other models
 - Add Populate (similar to Mongoose)

@@ -27,7 +27,11 @@ var LocalDocument = function(data, schema) {
 
 /**
  * Forces the types
- * @param
+ * @public
+ * @param {String} key
+ * @param {String/Number} property - the data needing converted
+ * @param {Object} schema - the model schema
+ * @returns {Object/String/Number} the converted property
  */
 LocalDocument.convert = function(key, property, schema) {
   var type;
@@ -66,7 +70,21 @@ LocalDocument.prototype.save = function() {
     toBeSaved[key] = this.data[key];
   }
 
-  console.log(toBeSaved);
   var itemKey = getKey(this.schema.name, this.data._id);
   localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
+};
+
+/**
+ * Used to wipe this document from memory
+ * @public
+ */
+LocalDocument.prototype.remove = function() {
+  // Remove the key from indices
+  removeIndex(this.schema.name, this.indexKey);
+
+  // Remove the data from storage
+  localStorage.removeItem(this.indexKey);
+
+  // Allow the schema to update
+  this.schema.indices = null;
 };

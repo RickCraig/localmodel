@@ -125,6 +125,15 @@ LocalSchema.prototype.find = function(query) {
   return results;
 };
 
+LocalSchema.prototype.remove = function(query) {
+  var entries = this.find(query);
+
+  // Remove each entry individually
+  for (var i = 0; i < entries.length; i++ ) {
+    entries[i].remove();
+  }
+};
+
 /**
  * LocalSchema Schema Types
  * For use in validation and return

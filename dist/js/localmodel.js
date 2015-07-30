@@ -107,6 +107,23 @@ var getIndex = function(indices, term) {
 };
 
 /**
+ * Removes an index from indices
+ * @private
+ * @param {String} model
+ * @param {String} key
+ */
+var removeIndex = function(model, key) {
+  var indices = getIndices(model);
+  var index = indices.indexOf(key);
+  if (index > -1) {
+    indices.splice(index, 1);
+    localStorage.setItem(model + '-index', JSON.stringify(indices));
+  } else {
+    console.error(new Error('The key "' + key + '" doesn\'t exist'));
+  }
+};
+
+/**
  * Local Document constructor
  * @public
  * @param {Object} data - the entry raw data
@@ -135,7 +152,11 @@ var LocalDocument = function(data, schema) {
 
 /**
  * Forces the types
- * @param
+ * @public
+ * @param {String} key
+ * @param {String/Number} property - the data needing converted
+ * @param {Object} schema - the model schema
+ * @returns {Object/String/Number} the converted property
  */
 LocalDocument.convert = function(key, property, schema) {
   var type;
@@ -174,9 +195,23 @@ LocalDocument.prototype.save = function() {
     toBeSaved[key] = this.data[key];
   }
 
-  console.log(toBeSaved);
   var itemKey = getKey(this.schema.name, this.data._id);
   localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
+};
+
+/**
+ * Used to wipe this document from memory
+ * @public
+ */
+LocalDocument.prototype.remove = function() {
+  // Remove the key from indices
+  removeIndex(this.schema.name, this.indexKey);
+
+  // Remove the data from storage
+  localStorage.removeItem(this.indexKey);
+
+  // Allow the schema to update
+  this.schema.indices = null;
 };
 
 /**
@@ -185,6 +220,10 @@ LocalDocument.prototype.save = function() {
  * @param {Object} options
  */
 var LocalModel = function(options) {
+  if (typeof Storage === 'undefined') {
+    console.error(new Error('Storage is not supported in this browser'));
+  }
+
   this.options = options || {};
   this.models = {};
 };
@@ -341,6 +380,15 @@ LocalSchema.prototype.find = function(query) {
   }
 
   return results;
+};
+
+LocalSchema.prototype.remove = function(query) {
+  var entries = this.find(query);
+
+  // Remove each entry individually
+  for (var i = 0; i < entries.length; i++ ) {
+    entries[i].remove();
+  }
 };
 
 /**
