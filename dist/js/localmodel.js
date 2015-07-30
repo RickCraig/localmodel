@@ -194,6 +194,7 @@ LocalDocument.prototype.save = function() {
   for (var key in this.schema.schema) {
     toBeSaved[key] = this.data[key];
   }
+  toBeSaved._id = this.data._id;
 
   var itemKey = getKey(this.schema.name, this.data._id);
   this.schema
@@ -428,6 +429,27 @@ LocalSchema.prototype.remove = function(query) {
  */
 LocalSchema.prototype.count = function(query) {
   return this.find(query, true);
+};
+
+/**
+ * A batch updater
+ * @public
+ * @param {Object} query - to find entries to update
+ * @param {Object} values - the values to update
+ * @returns {Number} the number of entries changed
+ */
+LocalSchema.prototype.update = function(query, values) {
+  var entries = this.find(query);
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    for (var key in this.schema) {
+      if (typeof values[key] !== 'undefined') {
+        entry.data[key] = values[key];
+      }
+    }
+    entry.save();
+  }
+  return entries.length;
 };
 
 /**
