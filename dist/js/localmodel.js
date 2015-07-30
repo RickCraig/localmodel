@@ -229,7 +229,7 @@ LocalDocument.prototype.remove = function() {
  */
 var LocalModel = function(options) {
   if (typeof Storage === 'undefined') {
-    console.warn(new Error('Storage is not supported in this browser'));
+    console.warn('Storage is not supported in this browser');
   }
 
   this.options = options || {};
@@ -377,8 +377,8 @@ LocalSchema.prototype.find = function(query, isCount) {
     for (var key in query) {
       var queryItem = query[key];
       var isRegex = queryItem instanceof RegExp;
-      if (!isRegex &&
-        (queryItem === '' || isEmpty(queryItem))) {
+      var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
+      if (!isRegex && (queryItem === '' || checkEmpty)) {
         continue;
       }
 
