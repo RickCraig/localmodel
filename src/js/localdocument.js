@@ -71,7 +71,10 @@ LocalDocument.prototype.save = function() {
   }
 
   var itemKey = getKey(this.schema.name, this.data._id);
-  localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
+  this.schema
+    .options
+    .storage
+    .setItem(itemKey, JSON.stringify(toBeSaved));
 };
 
 /**
@@ -80,7 +83,11 @@ LocalDocument.prototype.save = function() {
  */
 LocalDocument.prototype.remove = function() {
   // Remove the key from indices
-  removeIndex(this.schema.name, this.indexKey);
+  removeIndex(
+    this.schema.name,
+    this.indexKey,
+    this.schema.options
+  );
 
   // Remove the data from storage
   localStorage.removeItem(this.indexKey);

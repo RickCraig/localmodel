@@ -10,6 +10,10 @@ var LocalModel = function(options) {
 
   this.options = options || {};
   this.models = {};
+
+  if (!options.storage) {
+    this.options.storage = localStorage;
+  }
 };
 
 /**
@@ -20,7 +24,7 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
-  var model = new LocalSchema(name, schema);
+  var model = new LocalSchema(name, schema, this.options);
   this.models[name] = model;
   return model;
 };

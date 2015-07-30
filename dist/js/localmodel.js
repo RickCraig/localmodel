@@ -69,12 +69,12 @@ var getKey = function(name, id) {
  * @param {String} name - the name of the model
  * @param {String} newIndex - the key for the new entry
  */
-var addIndex = function(name, newIndex) {
+var addIndex = function(name, newIndex, options) {
   var indexName = name + '-index';
-  var indexString = localStorage.getItem(indexName);
+  var indexString = options.storage.getItem(indexName);
   var indices = indexString ? JSON.parse(indexString) : [];
   indices.push(newIndex);
-  localStorage.setItem(indexName, JSON.stringify(indices));
+  options.storage.setItem(indexName, JSON.stringify(indices));
 };
 
 /**
@@ -83,8 +83,8 @@ var addIndex = function(name, newIndex) {
  * @param {String} name - the model name
  * @returns {Array} the indices
  */
-var getIndices = function(name) {
-  var indices = localStorage.getItem(name + '-index');
+var getIndices = function(name, options) {
+  var indices = options.storage.getItem(name + '-index');
   return JSON.parse(indices);
 };
 
@@ -95,7 +95,7 @@ var getIndices = function(name) {
  * @param {String} term
  * @returns {String} matching index
  */
-var getIndex = function(indices, term) {
+var getIndex = function(indices, term, options) {
   var regex = new RegExp('::' + term, 'g');
   for (var i = 0; i < indices.length; i++) {
     var index = indices[i];
@@ -112,12 +112,12 @@ var getIndex = function(indices, term) {
  * @param {String} model
  * @param {String} key
  */
-var removeIndex = function(model, key) {
-  var indices = getIndices(model);
+var removeIndex = function(model, key, options) {
+  var indices = getIndices(model, options);
   var index = indices.indexOf(key);
   if (index > -1) {
     indices.splice(index, 1);
-    localStorage.setItem(model + '-index', JSON.stringify(indices));
+    options.storage.setItem(model + '-index', JSON.stringify(indices));
   } else {
     console.error(new Error('The key "' + key + '" doesn\'t exist'));
   }
@@ -196,7 +196,10 @@ LocalDocument.prototype.save = function() {
   }
 
   var itemKey = getKey(this.schema.name, this.data._id);
-  localStorage.setItem(itemKey, JSON.stringify(toBeSaved));
+  this.schema
+    .options
+    .storage
+    .setItem(itemKey, JSON.stringify(toBeSaved));
 };
 
 /**
@@ -205,7 +208,11 @@ LocalDocument.prototype.save = function() {
  */
 LocalDocument.prototype.remove = function() {
   // Remove the key from indices
-  removeIndex(this.schema.name, this.indexKey);
+  removeIndex(
+    this.schema.name,
+    this.indexKey,
+    this.schema.options
+  );
 
   // Remove the data from storage
   localStorage.removeItem(this.indexKey);
@@ -226,6 +233,10 @@ var LocalModel = function(options) {
 
   this.options = options || {};
   this.models = {};
+
+  if (!options.storage) {
+    this.options.storage = localStorage;
+  }
 };
 
 /**
@@ -236,7 +247,7 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
-  var model = new LocalSchema(name, schema);
+  var model = new LocalSchema(name, schema, this.options);
   this.models[name] = model;
   return model;
 };
@@ -260,9 +271,10 @@ LocalModel.prototype.model = function(name) {
  * @public
  * @param {Object} schema
  */
-var LocalSchema = function(name, schema) {
+var LocalSchema = function(name, schema, options) {
   this.schema = schema;
   this.name = name;
+  this.options = options;
 };
 
 /**
@@ -285,8 +297,8 @@ LocalSchema.prototype.create = function(data) {
   // Save to localstorage
   // At some point if there is an index, it can be added the the key for speed
   var index = getKey(this.name, newEntry._id);
-  localStorage.setItem(index, JSON.stringify(newEntry));
-  addIndex(this.name, index);
+  this.options.storage.setItem(index, JSON.stringify(newEntry));
+  addIndex(this.name, index, this.options);
 
   // Clear indices
   this.indices = null;
@@ -300,7 +312,7 @@ LocalSchema.prototype.create = function(data) {
  * @returns {Array} all entries
  */
 LocalSchema.prototype.all = function() {
-  this.indices = this.indices || getIndices(this.name);
+  this.indices = this.indices || getIndices(this.name, this.options);
   var results = [];
 
   // Check if the collection is empty
@@ -310,7 +322,7 @@ LocalSchema.prototype.all = function() {
 
   for (var i = 0; i < this.indices.length; i++) {
     var index = this.indices[i];
-    var result = JSON.parse(localStorage.getItem(index));
+    var result = JSON.parse(this.options.storage.getItem(index));
     results.push(new LocalDocument(result, this));
   }
 
@@ -324,12 +336,15 @@ LocalSchema.prototype.all = function() {
  * @returns {Object} the object or null
  */
 LocalSchema.prototype.findById = function(id) {
-  this.indices = this.indices || getIndices(this.name);
-  var match = getIndex(this.indices, id);
+  this.indices = this.indices || getIndices(this.name, this.options);
+  var match = getIndex(this.indices, id, this.options);
   if (!match) {
     return null;
   }
-  return new LocalDocument(JSON.parse(localStorage.getItem(match)), this);
+  return new LocalDocument(
+    JSON.parse(
+      this.options.storage.getItem(match)
+    ), this);
 };
 
 /**
@@ -343,7 +358,7 @@ LocalSchema.prototype.find = function(query) {
     return this.all();
   }
 
-  this.indices = this.indices || getIndices(this.name);
+  this.indices = this.indices || getIndices(this.name, this.options);
   var results = [];
 
   // Check if the collection is empty
@@ -352,7 +367,7 @@ LocalSchema.prototype.find = function(query) {
   }
 
   for (var i = 0; i < this.indices.length; i++) {
-    var entry = localStorage.getItem(this.indices[i]);
+    var entry = this.options.storage.getItem(this.indices[i]);
     var parsed = JSON.parse(entry);
     var matches = [];
 
