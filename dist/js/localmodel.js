@@ -228,8 +228,7 @@ LocalDocument.prototype.remove = function() {
  */
 var LocalModel = function(options) {
   if (typeof Storage === 'undefined') {
-    console.error(new Error('Storage is not supported in this browser'));
-    return;
+    console.warn(new Error('Storage is not supported in this browser'));
   }
 
   this.options = options || {};
