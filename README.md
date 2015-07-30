@@ -47,6 +47,37 @@ var localmodel = new LocalModel();
 ```
 Once instanciated you can use it to add models.
 
+#### Options
+##### Storage
+LocalModel will allow you to add an option to change the storage method, by default it is set to localStorage.
+```javascript
+// Default - use localStorage
+var localmodel = new LocalModel();
+
+// Use sessionStorage
+var localmodel = new LocalModel({
+  storage: sessionStorage
+});
+```
+You could even add your own method of storage. Note that it must contain ```storage.setItem(key, value)```, ```storage.getItem(key)``` and ```storage.removeItem(key)``` to allow the full functionality of LocalModel (and stop and huge errors).
+```javascript
+var myStorage = {
+  getItem: function(key) {
+    console.log('Getting item with key: ' + key);
+  },
+  setItem: function(key, value) {
+    console.log('Setting the value ' + value + ' for key ' + key);
+  },
+  removeItem: function(key) {
+    console.log('Removing item with key: ' + key);
+  }
+};
+
+var localmodel = new LocalModel({
+  storage: myStorage
+});
+```
+
 ### Adding Models
 To add a basic model do the following:
 ```javascript
@@ -197,12 +228,16 @@ gulp test
 ```
 
 ## Change Log
+v0.3.0
+- Add the option of using localsession
+
 v0.2.0:
 - Add Delete/Remove
 - Add a check for localstorage
 
 v0.1.2:
 - Add query date modifiers ($gt, $gte, $lt, $lte)
+- Split off matching to it's own function
 
 v0.1.1:
 - Add property defaults
@@ -216,10 +251,8 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add the option of using localsession
 - Add references/relationships to other models
 - Add Populate (similar to Mongoose)
 - Add a basic aggregate function
-- Split off matching to it's own function
 - Add batch update
 - Add Count helper
