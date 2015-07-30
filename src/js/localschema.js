@@ -163,6 +163,27 @@ LocalSchema.prototype.count = function(query) {
 };
 
 /**
+ * A batch updater
+ * @public
+ * @param {Object} query - to find entries to update
+ * @param {Object} values - the values to update
+ * @returns {Number} the number of entries changed
+ */
+LocalSchema.prototype.update = function(query, values) {
+  var entries = this.find(query);
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    for (var key in this.schema) {
+      if (typeof values[key] !== 'undefined') {
+        entry.data[key] = values[key];
+      }
+    }
+    entry.save();
+  }
+  return entries.length;
+};
+
+/**
  * LocalSchema Schema Types
  * For use in validation and return
  * @public
