@@ -124,8 +124,6 @@ var human = localmodel.model('MyModel');
 
 ### Adding an entry
 To add an entry to a model you just need to use the create function on the model instance.
-```ModelName.create(entryObject)```
-
 ```javascript
 human.create({
   name: 'Sammy',
@@ -135,16 +133,12 @@ human.create({
 
 ### All
 All will return all of the entries relevant to the model used.
-```ModelName.all()```
-
 ```javascript
 var allTheHumans = human.all();
 ```
 
 ### Find
 Find will allow you to use a query to find matching entries.
-```ModelName.find(query, isCount)```
-
 ```javascript
 var billys = human.find({
   name: 'Billy'
@@ -199,8 +193,6 @@ var totalSammys = human.count({ name: 'Sammy' });
 
 ### Find By ID
 If you have the ID of the entry you can quickly find it with ```findById(ID)```.
-```ModelName.findByID(entryId)```
-
 ```javascript
 var specificHuman = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 ```
