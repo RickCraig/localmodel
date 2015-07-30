@@ -69,7 +69,7 @@ LocalSchema.prototype.all = function() {
  */
 LocalSchema.prototype.findById = function(id) {
   this.indices = this.indices || getIndices(this.name, this.options);
-  var match = getIndex(this.indices, id, this.options);
+  var match = getIndex(this.indices, id);
   if (!match) {
     return null;
   }
@@ -83,15 +83,17 @@ LocalSchema.prototype.findById = function(id) {
  * Find entries matching a query
  * @public
  * @param {Object} query
- * @returns {Array} an array of matches
+ * @param {Boolean} isCount - return a count when true
+ * @returns {Array/Number} an array of matches or
+ * a number if isCount = true
  */
-LocalSchema.prototype.find = function(query) {
+LocalSchema.prototype.find = function(query, isCount) {
+  this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
-    return this.all();
+    return isCount ? this.indices.length : this.all();
   }
 
-  this.indices = this.indices || getIndices(this.name, this.options);
-  var results = [];
+  var results = isCount ? 0 : [];
 
   // Check if the collection is empty
   if (!this.indices) {
@@ -122,13 +124,23 @@ LocalSchema.prototype.find = function(query) {
     }
 
     if (!containsFalse(matches)) {
-      results.push(new LocalDocument(parsed, this));
+      if (!isCount) {
+        results.push(new LocalDocument(parsed, this));
+      } else {
+        results++;
+      }
     }
   }
 
   return results;
 };
 
+/**
+ * Remove entries utilising the find query
+ * @public
+ * @param {Object} query
+ * @returns {Number} the number of items removed
+ */
 LocalSchema.prototype.remove = function(query) {
   var entries = this.find(query);
 
@@ -136,6 +148,18 @@ LocalSchema.prototype.remove = function(query) {
   for (var i = 0; i < entries.length; i++ ) {
     entries[i].remove();
   }
+
+  return entries.length;
+};
+
+/**
+ * Helper to return a count of results
+ * @public
+ * @param {Object} query
+ * @returns {Number} the count of results
+ */
+LocalSchema.prototype.count = function(query) {
+  return this.find(query, true);
 };
 
 /**
