@@ -69,6 +69,7 @@ LocalDocument.prototype.save = function() {
   for (var key in this.schema.schema) {
     toBeSaved[key] = this.data[key];
   }
+  toBeSaved._id = this.data._id;
 
   var itemKey = getKey(this.schema.name, this.data._id);
   this.schema
