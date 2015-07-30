@@ -188,6 +188,14 @@ describe('find', function() {
     expect(emptyObject.length).toBe(0);
   });
 
+  it('should return a count when isCount is true', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    var count = model.find({}, true);
+    expect(typeof count).toBe('number');
+  });
+
 });
 
 describe('Match object', function() {
@@ -350,12 +358,29 @@ describe('Default values', function() {
     expect(saved.name).toBe('Sammy');
   });
 
-  it('should display the default even if it wasn\t saved with it', function() {
+  it('should display the default even if it wasn\'t saved with it', function() {
     localStorage.clear();
     var sammy = model.create({ name: 'Sammy' });
     model.schema['age'] = { type: LocalSchema.SchemaTypes.Number, default: 10 };
     var searched = model.findById(sammy.data._id);
     expect(searched.data.age).toBe(10);
+  });
+});
+
+describe('Count', function() {
+  var localmodel = new LocalModel();
+  var model = localmodel.addModel('TestCount', {
+    name: LocalSchema.SchemaTypes.String,
+    age: LocalSchema.SchemaTypes.Number
+  });
+
+  it('should return the number of entries based on a query', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Jonnie', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    var count = model.count({ age: 31 });
+    expect(count).toBe(2);
   });
 });
 
