@@ -82,7 +82,6 @@ var localmodel = new LocalModel({
 
 ### Adding Models
 To add a basic model do the following:
-```ModelName.addModel(name, schema)```
 ```javascript
 var human = localmodel.addModel('Human', {
   name: LocalSchema.SchemaTypes.String,
@@ -119,8 +118,6 @@ console.log(billy.data.isAlive); // false
 
 ### Getting a model
 If you ever need to retrieve a model instance you can call the following:
-```ModelName.model(modelName)```
-
 ```javascript
 var human = localmodel.model('MyModel');
 ```
@@ -192,8 +189,6 @@ var human = human.find({ created: { $lte: new Date(), $gte: new Date(2010, 1, 1)
 
 ### Count
 Count is a helper that returns a count of entries based on a query. It does the same thing as ```MyModel.find(query, true)```, but has better semantics.
-```ModelName.count(query)```
-
 ```javascript
 // Count all the humans
 var totalHumans = human.count();
@@ -219,8 +214,6 @@ console.log('Rick\'s age is: ' + rick.data.age);
 
 ### Saving an updated entry
 You can alter a LocalDocument data object and save it using the ```.save()``` method.
-```Entry.save()```
-
 ```javascript
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 
@@ -231,8 +224,6 @@ rick.save();
 
 ### Batch Updating
 You can update multiple entries in a single call, utilising the find query mechanism.
-``` ModelName.update(query, updateValues)```
-
 ```javascript
 // Update all entries named 'Sammy' to be active
 var numUpdated = human.update({ name: 'Sammy' }, { active: true });
@@ -240,15 +231,12 @@ var numUpdated = human.update({ name: 'Sammy' }, { active: true });
 
 ### Removing/Deleting
 You can remove an entry individually:
-```Entry.remove()```
-
 ```javascript
 // Remove rick, no one likes him anyway...
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 rick.remove();
 ```
 or you can remove multiple entries using the same query mechanism as find from the model:
-```ModelName.remove(query)```
 ```javascript
 // Remove all entries with age = 16
 human.remove({ age: 16 });
