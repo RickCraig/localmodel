@@ -6,12 +6,13 @@
 var LocalModel = function(options) {
   if (typeof Storage === 'undefined') {
     console.error(new Error('Storage is not supported in this browser'));
+    return;
   }
 
   this.options = options || {};
   this.models = {};
 
-  if (!options.storage) {
+  if (!this.options.storage) {
     this.options.storage = localStorage;
   }
 };
