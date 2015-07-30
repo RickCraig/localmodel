@@ -108,8 +108,8 @@ LocalSchema.prototype.find = function(query, isCount) {
     for (var key in query) {
       var queryItem = query[key];
       var isRegex = queryItem instanceof RegExp;
-      if (!isRegex &&
-        (queryItem === '' || isEmpty(queryItem))) {
+      var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
+      if (!isRegex && (queryItem === '' || checkEmpty)) {
         continue;
       }
 
