@@ -57,7 +57,7 @@ var getIndices = function(name, options) {
  * @param {String} term
  * @returns {String} matching index
  */
-var getIndex = function(indices, term, options) {
+var getIndex = function(indices, term) {
   var regex = new RegExp('::' + term, 'g');
   for (var i = 0; i < indices.length; i++) {
     var index = indices[i];
