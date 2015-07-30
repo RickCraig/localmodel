@@ -210,6 +210,7 @@ or you can remove multiple entries using the same query mechanism as find from t
 // Remove all entries with age = 16
 human.remove({ age: 16 });
 ```
+The ```LocalModal.remove()``` function returns the number of entries removed
 
 ## ID Generation
 Each ID is generated with a mixture of the date and random number generation. Each ID will be unique and can be accessed by the ```_id``` property.
