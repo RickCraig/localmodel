@@ -280,6 +280,7 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
+- Optimise/Refactor
 - Add references/relationships to other models
 - Add Populate (similar to Mongoose)
 - Add a basic aggregate function
