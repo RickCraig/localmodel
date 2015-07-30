@@ -5,11 +5,15 @@
  */
 var LocalModel = function(options) {
   if (typeof Storage === 'undefined') {
-    console.error(new Error('Storage is not supported in this browser'));
+    console.warn('Storage is not supported in this browser');
   }
 
   this.options = options || {};
   this.models = {};
+
+  if (!this.options.storage) {
+    this.options.storage = localStorage;
+  }
 };
 
 /**
@@ -20,7 +24,7 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
-  var model = new LocalSchema(name, schema);
+  var model = new LocalSchema(name, schema, this.options);
   this.models[name] = model;
   return model;
 };

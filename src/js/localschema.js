@@ -3,9 +3,10 @@
  * @public
  * @param {Object} schema
  */
-var LocalSchema = function(name, schema) {
+var LocalSchema = function(name, schema, options) {
   this.schema = schema;
   this.name = name;
+  this.options = options;
 };
 
 /**
@@ -28,8 +29,8 @@ LocalSchema.prototype.create = function(data) {
   // Save to localstorage
   // At some point if there is an index, it can be added the the key for speed
   var index = getKey(this.name, newEntry._id);
-  localStorage.setItem(index, JSON.stringify(newEntry));
-  addIndex(this.name, index);
+  this.options.storage.setItem(index, JSON.stringify(newEntry));
+  addIndex(this.name, index, this.options);
 
   // Clear indices
   this.indices = null;
@@ -43,7 +44,7 @@ LocalSchema.prototype.create = function(data) {
  * @returns {Array} all entries
  */
 LocalSchema.prototype.all = function() {
-  this.indices = this.indices || getIndices(this.name);
+  this.indices = this.indices || getIndices(this.name, this.options);
   var results = [];
 
   // Check if the collection is empty
@@ -53,7 +54,7 @@ LocalSchema.prototype.all = function() {
 
   for (var i = 0; i < this.indices.length; i++) {
     var index = this.indices[i];
-    var result = JSON.parse(localStorage.getItem(index));
+    var result = JSON.parse(this.options.storage.getItem(index));
     results.push(new LocalDocument(result, this));
   }
 
@@ -67,27 +68,32 @@ LocalSchema.prototype.all = function() {
  * @returns {Object} the object or null
  */
 LocalSchema.prototype.findById = function(id) {
-  this.indices = this.indices || getIndices(this.name);
+  this.indices = this.indices || getIndices(this.name, this.options);
   var match = getIndex(this.indices, id);
   if (!match) {
     return null;
   }
-  return new LocalDocument(JSON.parse(localStorage.getItem(match)), this);
+  return new LocalDocument(
+    JSON.parse(
+      this.options.storage.getItem(match)
+    ), this);
 };
 
 /**
  * Find entries matching a query
  * @public
  * @param {Object} query
- * @returns {Array} an array of matches
+ * @param {Boolean} isCount - return a count when true
+ * @returns {Array/Number} an array of matches or
+ * a number if isCount = true
  */
-LocalSchema.prototype.find = function(query) {
+LocalSchema.prototype.find = function(query, isCount) {
+  this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
-    return this.all();
+    return isCount ? this.indices.length : this.all();
   }
 
-  this.indices = this.indices || getIndices(this.name);
-  var results = [];
+  var results = isCount ? 0 : [];
 
   // Check if the collection is empty
   if (!this.indices) {
@@ -95,15 +101,15 @@ LocalSchema.prototype.find = function(query) {
   }
 
   for (var i = 0; i < this.indices.length; i++) {
-    var entry = localStorage.getItem(this.indices[i]);
+    var entry = this.options.storage.getItem(this.indices[i]);
     var parsed = JSON.parse(entry);
     var matches = [];
 
     for (var key in query) {
       var queryItem = query[key];
       var isRegex = queryItem instanceof RegExp;
-      if (!isRegex &&
-        (queryItem === '' || isEmpty(queryItem))) {
+      var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
+      if (!isRegex && (queryItem === '' || checkEmpty)) {
         continue;
       }
 
@@ -118,13 +124,23 @@ LocalSchema.prototype.find = function(query) {
     }
 
     if (!containsFalse(matches)) {
-      results.push(new LocalDocument(parsed, this));
+      if (!isCount) {
+        results.push(new LocalDocument(parsed, this));
+      } else {
+        results++;
+      }
     }
   }
 
   return results;
 };
 
+/**
+ * Remove entries utilising the find query
+ * @public
+ * @param {Object} query
+ * @returns {Number} the number of items removed
+ */
 LocalSchema.prototype.remove = function(query) {
   var entries = this.find(query);
 
@@ -132,6 +148,39 @@ LocalSchema.prototype.remove = function(query) {
   for (var i = 0; i < entries.length; i++ ) {
     entries[i].remove();
   }
+
+  return entries.length;
+};
+
+/**
+ * Helper to return a count of results
+ * @public
+ * @param {Object} query
+ * @returns {Number} the count of results
+ */
+LocalSchema.prototype.count = function(query) {
+  return this.find(query, true);
+};
+
+/**
+ * A batch updater
+ * @public
+ * @param {Object} query - to find entries to update
+ * @param {Object} values - the values to update
+ * @returns {Number} the number of entries changed
+ */
+LocalSchema.prototype.update = function(query, values) {
+  var entries = this.find(query);
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    for (var key in this.schema) {
+      if (typeof values[key] !== 'undefined') {
+        entry.data[key] = values[key];
+      }
+    }
+    entry.save();
+  }
+  return entries.length;
 };
 
 /**

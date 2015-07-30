@@ -2,7 +2,44 @@
 
 localStorage.clear()
 
-describe('model creation', function() {
+describe('Generic LocalModel', function() {
+
+  it('should console.warn when Storage is undefined', function() {
+    Storage = undefined;
+    spyOn(console, 'warn');
+    var localmodel = new LocalModel();
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+});
+
+describe('Generic LocalDocument', function() {
+
+  var localmodel = new LocalModel();
+  var model = localmodel.addModel('TestLocalDoc', {
+    created: LocalSchema.SchemaTypes.Date
+  });
+
+  it('should parse a date when type is date', function() {
+
+    var first = model.create({ created: Date.now() });
+    var searched = model.findById(first.data._id);
+    expect(searched.data.created instanceof Date).toBe(true);
+  });
+
+  it('should set the type to string when type is missing', function() {
+    localStorage.clear();
+    var testModel = localmodel.addModel('TestDefaultType', {
+      test: {}
+    });
+    var first = testModel.create({ test: 'foo' });
+    var searched = testModel.findById(first.data._id);
+    expect(typeof searched.data.test).toBe('string');
+  });
+
+});
+
+describe('Model creation', function() {
 
   var localmodel = new LocalModel();
 
@@ -16,7 +53,7 @@ describe('model creation', function() {
 
 });
 
-describe('get model', function() {
+describe('Get model', function() {
 
   var localmodel = new LocalModel();
   var model = localmodel.addModel('Test', {
@@ -188,6 +225,22 @@ describe('find', function() {
     expect(emptyObject.length).toBe(0);
   });
 
+  it('should return a count when isCount is true', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    var count = model.find({}, true);
+    expect(typeof count).toBe('number');
+  });
+
+  it('should return no results when a non-existing property is added', function() {
+    localStorage.clear();
+    model.indices = null;
+    model.create({ name: 'Billy', age: 31 });
+    var results = model.find({ active: true });
+    expect(results.length).toBe(0);
+  });
+
 });
 
 describe('Match object', function() {
@@ -297,32 +350,6 @@ describe('Save', function() {
 
 });
 
-describe('Generic LocalDocument', function() {
-
-  var localmodel = new LocalModel();
-  var model = localmodel.addModel('TestLocalDoc', {
-    created: LocalSchema.SchemaTypes.Date
-  });
-
-  it('should parse a date when type is date', function() {
-
-    var first = model.create({ created: Date.now() });
-    var searched = model.findById(first.data._id);
-    expect(searched.data.created instanceof Date).toBe(true);
-  });
-
-  it('should set the type to string when type is missing', function() {
-    localStorage.clear();
-    var testModel = localmodel.addModel('TestDefaultType', {
-      test: {}
-    });
-    var first = testModel.create({ test: 'foo' });
-    var searched = testModel.findById(first.data._id);
-    expect(typeof searched.data.test).toBe('string');
-  });
-
-});
-
 describe('Default values', function() {
 
   var localmodel = new LocalModel();
@@ -350,12 +377,102 @@ describe('Default values', function() {
     expect(saved.name).toBe('Sammy');
   });
 
-  it('should display the default even if it wasn\t saved with it', function() {
+  it('should display the default even if it wasn\'t saved with it', function() {
     localStorage.clear();
     var sammy = model.create({ name: 'Sammy' });
     model.schema['age'] = { type: LocalSchema.SchemaTypes.Number, default: 10 };
     var searched = model.findById(sammy.data._id);
     expect(searched.data.age).toBe(10);
+  });
+});
+
+describe('count', function() {
+  var localmodel = new LocalModel();
+  var model = localmodel.addModel('TestCount', {
+    name: LocalSchema.SchemaTypes.String,
+    age: LocalSchema.SchemaTypes.Number
+  });
+
+  it('should return the number of entries based on a query', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Jonnie', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    var count = model.count({ age: 31 });
+    expect(count).toBe(2);
+  });
+});
+
+describe('update', function() {
+  var localmodel = new LocalModel();
+  var model = localmodel.addModel('TestUpdate', {
+    name: LocalSchema.SchemaTypes.String,
+    age: LocalSchema.SchemaTypes.Number,
+    active: { type: LocalSchema.SchemaTypes.Boolean, default: false }
+  });
+
+  it('should update multiple records at once', function() {
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Jonnie', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    model.update({ age: 31 }, { active: true });
+    var humans = model.find({ age: 31 });
+    expect(humans[0].data.active).toBe(true);
+    expect(humans[1].data.active).toBe(true);
+  });
+
+  it('should return the amount of entries updated', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Jonnie', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    var updated = model.update({ age: 31 }, { active: true });
+    expect(updated).toBe(2);
+  });
+});
+
+describe('remove', function() {
+var localmodel = new LocalModel();
+  var model = localmodel.addModel('TestRemove', {
+    name: LocalSchema.SchemaTypes.String,
+    age: LocalSchema.SchemaTypes.Number,
+    active: { type: LocalSchema.SchemaTypes.Boolean, default: false }
+  });
+
+  it('should return an error if the index doesn\'t exist', function() {
+    spyOn(console, 'error');
+    var billy = model.create({ name: 'Billy', age: 31 });
+    removeIndex('TestRemove', 'foo', { storage: localStorage });
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should remove multiple records at once', function() {
+    localStorage.clear();
+    var billy = model.create({ name: 'Billy', age: 31 });
+    billy.remove();
+    var indices = localStorage.getItem('TestRemove-index');
+    var parsed = JSON.parse(indices);
+    expect(parsed.length).toBe(0);
+  });
+
+  it('should remove multiple records at once', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Jonnie', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    model.remove({ age: 31 });
+    var indices = localStorage.getItem('TestRemove-index');
+    var parsed = JSON.parse(indices);
+    expect(parsed.length).toBe(1);
+  });
+
+  it('should return the amount of entries removed', function() {
+    localStorage.clear();
+    model.create({ name: 'Billy', age: 31 });
+    model.create({ name: 'Jonnie', age: 31 });
+    model.create({ name: 'Sammy', age: 25 });
+    var removed = model.remove({ age: 31 });
+    expect(removed).toBe(2);
   });
 });
 

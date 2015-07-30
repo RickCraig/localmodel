@@ -35,9 +35,11 @@ This will cover the basic usage of LocalModel:
 - [Getting a model](#getting-a-model)
 - [All](#all)
 - [Find](#find)
+- [Count](#count)
 - [Find By ID](#find-by-id)
 - [Using returned data](#using-returned-data)
 - [Saving an updated entry](#saving-an-updated-entry)
+- [Batch Update](#batch-update)
 - [Removing/Deleting](#removingdeleting)
 
 ### Basic Setup
@@ -46,6 +48,37 @@ LocalModel needs to be instantiated. At the moment there are no options to pass:
 var localmodel = new LocalModel();
 ```
 Once instanciated you can use it to add models.
+
+#### Options
+##### Storage
+LocalModel will allow you to add an option to change the storage method, by default it is set to localStorage.
+```javascript
+// Default - use localStorage
+var localmodel = new LocalModel();
+
+// Use sessionStorage
+var localmodel = new LocalModel({
+  storage: sessionStorage
+});
+```
+You could even add your own method of storage. Note that it must contain ```storage.setItem(key, value)```, ```storage.getItem(key)``` and ```storage.removeItem(key)``` to allow the full functionality of LocalModel (and stop and huge errors).
+```javascript
+var myStorage = {
+  getItem: function(key) {
+    console.log('Getting item with key: ' + key);
+  },
+  setItem: function(key, value) {
+    console.log('Setting the value ' + value + ' for key ' + key);
+  },
+  removeItem: function(key) {
+    console.log('Removing item with key: ' + key);
+  }
+};
+
+var localmodel = new LocalModel({
+  storage: myStorage
+});
+```
 
 ### Adding Models
 To add a basic model do the following:
@@ -121,6 +154,10 @@ var partialMatches = human.find({
   name: /Sam/g
 });
 ```
+You can also return a count instead of an array by setting the second argument to true
+```javascript
+var totalHumansAgeTen = human.find({ age: 10 }, true);
+```
 
 #### $gte, $gt, $lte, $lt
 You can use a more advanced query to get numbers and dates that are greater than or equal, greater than, less than or equal and less than:
@@ -142,6 +179,16 @@ var humans = human.find({ age: { $lt: 50, $gt: 20 } });
 
 // Find all with a created date between 2010 and now
 var human = human.find({ created: { $lte: new Date(), $gte: new Date(2010, 1, 1) } });
+```
+
+### Count
+Count is a helper that returns a count of entries based on a query. It does the same thing as ```MyModel.find(query, true)```, but has better semantics.
+```javascript
+// Count all the humans
+var totalHumans = human.count();
+
+// Count humans with name 'Sammy'
+var totalSammys = human.count({ name: 'Sammy' });
 ```
 
 ### Find By ID
@@ -167,6 +214,13 @@ rick.data.age = 32;
 rick.save();
 ```
 
+### Batch Updating
+You can update multiple entries in a single call, utilising the find query mechanism.
+```javascript
+// Update all entries named 'Sammy' to be active
+var numUpdated = human.update({ name: 'Sammy' }, { active: true });
+```
+
 ### Removing/Deleting
 You can remove an entry individually:
 ```javascript
@@ -178,7 +232,11 @@ or you can remove multiple entries using the same query mechanism as find from t
 ```javascript
 // Remove all entries with age = 16
 human.remove({ age: 16 });
+
+// Remove all entries
+human.remove();
 ```
+The ```LocalModal.remove()``` function returns the number of entries removed
 
 ## ID Generation
 Each ID is generated with a mixture of the date and random number generation. Each ID will be unique and can be accessed by the ```_id``` property.
@@ -197,12 +255,18 @@ gulp test
 ```
 
 ## Change Log
+v0.3.0
+- Add the option of using localsession
+- Add Count helper
+- Add batch update
+
 v0.2.0:
 - Add Delete/Remove
 - Add a check for localstorage
 
 v0.1.2:
 - Add query date modifiers ($gt, $gte, $lt, $lte)
+- Split off matching to it's own function
 
 v0.1.1:
 - Add property defaults
@@ -216,10 +280,6 @@ v0.0.2:
 - Added query number modifiers ($gt, $gte, $lt, $lte)
 
 ## To Do
-- Add the option of using localsession
 - Add references/relationships to other models
 - Add Populate (similar to Mongoose)
 - Add a basic aggregate function
-- Split off matching to it's own function
-- Add batch update
-- Add Count helper

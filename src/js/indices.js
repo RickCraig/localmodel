@@ -31,12 +31,12 @@ var getKey = function(name, id) {
  * @param {String} name - the name of the model
  * @param {String} newIndex - the key for the new entry
  */
-var addIndex = function(name, newIndex) {
+var addIndex = function(name, newIndex, options) {
   var indexName = name + '-index';
-  var indexString = localStorage.getItem(indexName);
+  var indexString = options.storage.getItem(indexName);
   var indices = indexString ? JSON.parse(indexString) : [];
   indices.push(newIndex);
-  localStorage.setItem(indexName, JSON.stringify(indices));
+  options.storage.setItem(indexName, JSON.stringify(indices));
 };
 
 /**
@@ -45,8 +45,8 @@ var addIndex = function(name, newIndex) {
  * @param {String} name - the model name
  * @returns {Array} the indices
  */
-var getIndices = function(name) {
-  var indices = localStorage.getItem(name + '-index');
+var getIndices = function(name, options) {
+  var indices = options.storage.getItem(name + '-index');
   return JSON.parse(indices);
 };
 
@@ -74,12 +74,12 @@ var getIndex = function(indices, term) {
  * @param {String} model
  * @param {String} key
  */
-var removeIndex = function(model, key) {
-  var indices = getIndices(model);
+var removeIndex = function(model, key, options) {
+  var indices = getIndices(model, options);
   var index = indices.indexOf(key);
   if (index > -1) {
     indices.splice(index, 1);
-    localStorage.setItem(model + '-index', JSON.stringify(indices));
+    options.storage.setItem(model + '-index', JSON.stringify(indices));
   } else {
     console.error(new Error('The key "' + key + '" doesn\'t exist'));
   }
