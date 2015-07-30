@@ -35,6 +35,7 @@ This will cover the basic usage of LocalModel:
 - [Getting a model](#getting-a-model)
 - [All](#all)
 - [Find](#find)
+- [Count](#count)
 - [Find By ID](#find-by-id)
 - [Using returned data](#using-returned-data)
 - [Saving an updated entry](#saving-an-updated-entry)
@@ -152,6 +153,10 @@ var partialMatches = human.find({
   name: /Sam/g
 });
 ```
+You can also return a count instead of an array by setting the second argument to true
+```javascript
+var totalHumansAgeTen = human.find({ age: 10 }, true);
+```
 
 #### $gte, $gt, $lte, $lt
 You can use a more advanced query to get numbers and dates that are greater than or equal, greater than, less than or equal and less than:
@@ -173,6 +178,16 @@ var humans = human.find({ age: { $lt: 50, $gt: 20 } });
 
 // Find all with a created date between 2010 and now
 var human = human.find({ created: { $lte: new Date(), $gte: new Date(2010, 1, 1) } });
+```
+
+### Count
+Count is a helper that returns a count of entries based on a query. It does the same thing as ```MyModel.find(query, true)```, but has better semantics.
+```javascript
+// Count all the humans
+var totalHumans = human.count();
+
+// Count humans with name 'Sammy'
+var totalSammys = human.count({ name: 'Sammy' });
 ```
 
 ### Find By ID
@@ -231,6 +246,7 @@ gulp test
 ## Change Log
 v0.3.0
 - Add the option of using localsession
+- Add Count helper
 
 v0.2.0:
 - Add Delete/Remove
@@ -256,4 +272,3 @@ v0.0.2:
 - Add Populate (similar to Mongoose)
 - Add a basic aggregate function
 - Add batch update
-- Add Count helper
