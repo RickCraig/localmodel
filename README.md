@@ -39,6 +39,7 @@ This will cover the basic usage of LocalModel:
 - [Find By ID](#find-by-id)
 - [Using returned data](#using-returned-data)
 - [Saving an updated entry](#saving-an-updated-entry)
+- [Batch Update](#batch-update)
 - [Removing/Deleting](#removingdeleting)
 
 ### Basic Setup
@@ -81,6 +82,7 @@ var localmodel = new LocalModel({
 
 ### Adding Models
 To add a basic model do the following:
+```ModelName.addModel(name, schema)```
 ```javascript
 var human = localmodel.addModel('Human', {
   name: LocalSchema.SchemaTypes.String,
@@ -117,12 +119,14 @@ console.log(billy.data.isAlive); // false
 
 ### Getting a model
 If you ever need to retrieve a model instance you can call the following:
+```ModelName.model(modelName)```
 ```javascript
 var human = localmodel.model('MyModel');
 ```
 
 ### Adding an entry
 To add an entry to a model you just need to use the create function on the model instance.
+```ModelName.create(entryObject)```
 ```javascript
 human.create({
   name: 'Sammy',
@@ -132,12 +136,14 @@ human.create({
 
 ### All
 All will return all of the entries relevant to the model used.
+```ModelName.all()```
 ```javascript
 var allTheHumans = human.all();
 ```
 
 ### Find
 Find will allow you to use a query to find matching entries.
+```ModelName.find(query, isCount)```
 ```javascript
 var billys = human.find({
   name: 'Billy'
@@ -182,6 +188,7 @@ var human = human.find({ created: { $lte: new Date(), $gte: new Date(2010, 1, 1)
 
 ### Count
 Count is a helper that returns a count of entries based on a query. It does the same thing as ```MyModel.find(query, true)```, but has better semantics.
+```ModelName.count(query)```
 ```javascript
 // Count all the humans
 var totalHumans = human.count();
@@ -192,6 +199,7 @@ var totalSammys = human.count({ name: 'Sammy' });
 
 ### Find By ID
 If you have the ID of the entry you can quickly find it with ```findById(ID)```.
+```ModelName.findByID(entryId)```
 ```javascript
 var specificHuman = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 ```
@@ -205,6 +213,7 @@ console.log('Rick\'s age is: ' + rick.data.age);
 
 ### Saving an updated entry
 You can alter a LocalDocument data object and save it using the ```.save()``` method.
+```Entry.save()```
 ```javascript
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 
@@ -213,17 +222,30 @@ rick.data.age = 32;
 rick.save();
 ```
 
+### Batch Updating
+You can update multiple entries in a single call, utilising the find query mechanism.
+``` ModelName.update(query, updateValues)```
+```javascript
+// Update all entries named 'Sammy' to be active
+var numUpdated = human.update({ name: 'Sammy' }, { active: true });
+```
+
 ### Removing/Deleting
 You can remove an entry individually:
+```Entry.remove()```
 ```javascript
 // Remove rick, no one likes him anyway...
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 rick.remove();
 ```
 or you can remove multiple entries using the same query mechanism as find from the model:
+```ModelName.remove(query)```
 ```javascript
 // Remove all entries with age = 16
 human.remove({ age: 16 });
+
+// Remove all entries
+human.remove();
 ```
 The ```LocalModal.remove()``` function returns the number of entries removed
 
@@ -247,6 +269,7 @@ gulp test
 v0.3.0
 - Add the option of using localsession
 - Add Count helper
+- Add batch update
 
 v0.2.0:
 - Add Delete/Remove
@@ -271,4 +294,3 @@ v0.0.2:
 - Add references/relationships to other models
 - Add Populate (similar to Mongoose)
 - Add a basic aggregate function
-- Add batch update
