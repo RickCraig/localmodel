@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Generates a random UUID
  * @private

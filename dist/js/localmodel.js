@@ -6,6 +6,9 @@
 
 'use strict';
 
+
+
+
 /**
  * Checks if an object is empty
  * @private
@@ -35,6 +38,8 @@ var containsFalse = function(arr) {
   }
   return false;
 };
+
+
 
 /**
  * Generates a random UUID
@@ -123,6 +128,8 @@ var removeIndex = function(model, key, options) {
   }
 };
 
+
+
 /**
  * LocalDebug constructor
  */
@@ -159,6 +166,8 @@ LocalDebug.prototype.log = function() {
   if (!this.options.enabled) { return; }
   console.log('[LocalModel]', arguments);
 };
+
+
 
 /**
  * Local Document constructor
@@ -269,6 +278,8 @@ LocalDocument.prototype.remove = function() {
   this.schema.options.debug.end('Removing entry');
 };
 
+
+
 /**
  * LocalModel constructor
  * @public
@@ -317,6 +328,8 @@ LocalModel.prototype.model = function(name) {
   }
   return this.models[name];
 };
+
+
 
 /**
  * Local Schema constructor
@@ -566,6 +579,8 @@ LocalSchema.SchemaTypes = {
   Mixed: 'mixed',
   Date: 'date'
 };
+
+
 
 /**
  * Handle date

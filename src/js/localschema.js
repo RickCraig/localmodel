@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Local Schema constructor
  * @public

@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * LocalModel constructor
  * @public

@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Handle date
  * @private
