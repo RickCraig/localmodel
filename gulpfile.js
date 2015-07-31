@@ -43,19 +43,19 @@ gulp.task('minify', function() {
     .pipe(gulp.dest('dist/js'));
 });
 
-gulp.task('bump-patch', function() {
+gulp.task('patch', function() {
   return gulp.src(paths.packages)
     .pipe(bump({type: 'patch'}))
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('bump-minor', function() {
+gulp.task('minor', function() {
   return gulp.src(paths.packages)
     .pipe(bump({type: 'minor'}))
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('bump-major', function() {
+gulp.task('major', function() {
   return gulp.src(paths.packages)
     .pipe(bump({type: 'major'}))
     .pipe(gulp.dest('./'));
@@ -76,7 +76,7 @@ gulp.task('release-patch', function() {
     'lint',
     'test',
     'concat',
-    ['bump-patch', 'minify'],
+    ['patch', 'minify'],
     'tag'
   );
 });
@@ -87,13 +87,13 @@ gulp.task('release-minor', function() {
     'lint',
     'test',
     'concat',
-    ['bump-minor', 'minify'],
+    ['minor', 'minify'],
     'tag'
   );
 });
 
 gulp.task('release-major', function() {
-  runSequence('concat', 'lint', 'test',['bump-major', 'minify'], 'tag');
+  runSequence('concat', 'lint', 'test',['major', 'minify'], 'tag');
 });
 
 gulp.task('lint', function() {
