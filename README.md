@@ -80,6 +80,14 @@ var localmodel = new LocalModel({
 });
 ```
 
+##### Debugging
+To enable debugging set the options 'debug' to true, the default is false.
+```javascript
+var localmodel = new LocalModel({
+  debug: true
+});
+```
+
 ### Adding Models
 To add a basic model do the following:
 ```javascript
