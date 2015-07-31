@@ -1,5 +1,6 @@
 languages:
   JavaScript: true
 exclude_paths:
-- dist/**/*
+- src/**/*
+- dist/js/localmodel.min.js
 - spec/*
