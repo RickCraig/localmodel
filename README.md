@@ -263,6 +263,9 @@ gulp test
 ```
 
 ## Change Log
+v0.3.1
+- Minor optimisations
+
 v0.3.0
 - Add the option of using localsession
 - Add Count helper
