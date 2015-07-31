@@ -425,6 +425,40 @@ LocalSchema.prototype.findById = function(id) {
     ), this);
 };
 
+
+/**
+ * Looks through the schema for an entry
+ * @private
+ * @param {Object} entry - the parsed entry
+ * @param {Object} query
+ * @returns {Array} an array of matches
+ */
+LocalSchema.prototype.checkEntry = function(entry, query) {
+  var total = this.keys.length;
+  var matches = [];
+  for (var q = 0; q < total; q++) {
+    var key = this.keys[q];
+    var queryItem = query[key];
+    if (typeof queryItem === 'undefined') {
+      continue;
+    }
+
+    var isRegex = queryItem instanceof RegExp;
+    var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
+    if (!isRegex && (queryItem === '' || checkEmpty)) {
+      continue;
+    }
+
+    if (entry[key]) {
+      matches.push(matchQuery(
+        LocalDocument.convert(key, entry[key], this.schema),
+        queryItem
+      ));
+    }
+  }
+  return matches;
+};
+
 /**
  * Find entries matching a query
  * @public
@@ -450,29 +484,7 @@ LocalSchema.prototype.find = function(query, isCount) {
   for (var i = 0; i < this.indices.length; i++) {
     var entry = this.options.storage.getItem(this.indices[i]);
     var parsed = JSON.parse(entry);
-    var matches = [];
-    var total = this.keys.length;
-
-    for (var q = 0; q < total; q++) {
-      var key = this.keys[q];
-      var queryItem = query[key];
-      if (typeof queryItem === 'undefined') {
-        continue;
-      }
-
-      var isRegex = queryItem instanceof RegExp;
-      var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
-      if (!isRegex && (queryItem === '' || checkEmpty)) {
-        continue;
-      }
-
-      if (parsed[key]) {
-        matches.push(matchQuery(
-          LocalDocument.convert(key, parsed[key], this.schema),
-          queryItem
-        ));
-      }
-    }
+    var matches = this.checkEntry(parsed, query);
 
     if (matches.length > 0 && !containsFalse(matches)) {
       if (!isCount) {
