@@ -568,6 +568,40 @@ LocalSchema.SchemaTypes = {
 };
 
 /**
+ * Handle date
+ * @private
+ * @param {Object} data
+ * @param {Object} query
+ * @param {Boolean} isDate
+ * @returns {Boolean} true if matched
+ */
+var handleSums = function(data, query, isDate) {
+  var dateMatches = [];
+
+  if (query.$gte) {
+    var gte = isDate ? new Date(query.$gte) : query.$gte;
+    dateMatches.push(gte <= data);
+  }
+
+  if (query.$gt) {
+    var gt = isDate ? new Date(query.$gt) : query.$gt;
+    dateMatches.push(gt < data);
+  }
+
+  if (query.$lte) {
+    var lte = isDate ? new Date(query.$lte) : query.$lte;
+    dateMatches.push(lte >= data);
+  }
+
+  if (query.$lt) {
+    var lt = isDate ? new Date(query.$lt) : query.$lt;
+    dateMatches.push(lt > data);
+  }
+
+  return !containsFalse(dateMatches);
+};
+
+/**
  * Handles the object
  * @private
  * @param {Object} data
@@ -578,47 +612,13 @@ var handleQueryObject = function(data, query) {
   // Do the business in here for $gte, $gt, $lte, $lt
 
   if (typeof data === 'number') {
-    var numberMatches = [];
-    if (query.$gte) {
-      numberMatches.push(query.$gte <= data);
-    }
-
-    if (query.$gt) {
-      numberMatches.push(query.$gt < data);
-    }
-
-    if (query.$lte) {
-      numberMatches.push(query.$lte >= data);
-    }
-
-    if (query.$lt) {
-      numberMatches.push(query.$lt > data);
-    }
-
-    return !containsFalse(numberMatches);
+    return handleSums(data, query);
   }
 
   if (data instanceof Date) {
-    var dateMatches = [];
-
-    if (query.$gte) {
-      dateMatches.push(new Date(query.$gte) <= data);
-    }
-
-    if (query.$gt) {
-      dateMatches.push(new Date(query.$gt) < data);
-    }
-
-    if (query.$lte) {
-      dateMatches.push(new Date(query.$lte) >= data);
-    }
-
-    if (query.$lt) {
-      dateMatches.push(new Date(query.$lt) > data);
-    }
-
-    return !containsFalse(dateMatches);
+    return handleSums(data, query, true);
   }
+
 };
 
 /**
