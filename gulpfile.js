@@ -71,11 +71,25 @@ gulp.task('release', function() {
 });
 
 gulp.task('release-patch', function() {
-  runSequence('concat', 'lint', 'test', 'concat', ['bump-patch', 'minify'], 'tag');
+  runSequence(
+    'concat',
+    'lint',
+    'test',
+    'concat',
+    ['bump-patch', 'minify'],
+    'tag'
+  );
 });
 
 gulp.task('release-minor', function() {
-  runSequence('concat', 'lint', 'test', 'concat', ['bump-minor', 'minify'], 'tag');
+  runSequence(
+    'concat',
+    'lint',
+    'test',
+    'concat',
+    ['bump-minor', 'minify'],
+    'tag'
+  );
 });
 
 gulp.task('release-major', function() {
