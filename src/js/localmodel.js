@@ -16,7 +16,7 @@ var LocalModel = function(options) {
   }
 
   this.options.debug = new LocalDebug({
-    enabled: !!options.debug
+    enabled: options && options.debug ? true : false
   });
 };
 

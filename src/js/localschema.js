@@ -11,6 +11,20 @@ var LocalSchema = function(name, schema, options) {
 };
 
 /**
+ * Adds a property to the schema
+ * @public
+ * @param {Object} property
+ */
+LocalSchema.prototype.addToSchema = function(property) {
+  var newKeys = Object.keys(property);
+  var total = newKeys.length;
+  for (var i = 0; i < total; i++) {
+    this.schema[newKeys[i]] = property[newKeys[i]];
+  }
+  this.keys = Object.keys(this.schema);
+};
+
+/**
  * Create a new data object for this schema
  * @public
  * @param {Object} data
@@ -122,6 +136,10 @@ LocalSchema.prototype.find = function(query, isCount) {
     for (var q = 0; q < total; q++) {
       var key = this.keys[q];
       var queryItem = query[key];
+      if (typeof queryItem === 'undefined') {
+        continue;
+      }
+
       var isRegex = queryItem instanceof RegExp;
       var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
       if (!isRegex && (queryItem === '' || checkEmpty)) {
@@ -133,12 +151,10 @@ LocalSchema.prototype.find = function(query, isCount) {
           LocalDocument.convert(key, parsed[key], this.schema),
           queryItem
         ));
-      } else {
-        matches.push(false);
       }
     }
 
-    if (!containsFalse(matches)) {
+    if (matches.length > 0 && !containsFalse(matches)) {
       if (!isCount) {
         results.push(new LocalDocument(parsed, this));
       } else {
@@ -148,6 +164,7 @@ LocalSchema.prototype.find = function(query, isCount) {
   }
 
   this.options.debug.end('Finding ' + this.name + 's');
+  this.options.debug.log(results.length + ' results found');
 
   return results;
 };

@@ -380,7 +380,7 @@ describe('Default values', function() {
   it('should display the default even if it wasn\'t saved with it', function() {
     localStorage.clear();
     var sammy = model.create({ name: 'Sammy' });
-    model.schema['age'] = { type: LocalSchema.SchemaTypes.Number, default: 10 };
+    model.addToSchema({ age: { type: LocalSchema.SchemaTypes.Number, default: 10 } });
     var searched = model.findById(sammy.data._id);
     expect(searched.data.age).toBe(10);
   });
@@ -432,7 +432,7 @@ describe('update', function() {
 });
 
 describe('remove', function() {
-var localmodel = new LocalModel();
+  var localmodel = new LocalModel();
   var model = localmodel.addModel('TestRemove', {
     name: LocalSchema.SchemaTypes.String,
     age: LocalSchema.SchemaTypes.Number,
@@ -474,5 +474,43 @@ var localmodel = new LocalModel();
     var removed = model.remove({ age: 31 });
     expect(removed).toBe(2);
   });
+});
+
+describe('debug', function() {
+  var localmodel = new LocalModel({ debug: true });
+  var model = localmodel.addModel('TestDebug', {
+    name: LocalSchema.SchemaTypes.String
+  });
+
+  it('should call time and timeEnd to profile a complicated method', function() {
+    spyOn(console, 'time');
+    spyOn(console, 'timeEnd');
+    model.create({ name: 'Billy', age: 31 });
+    expect(console.time).toHaveBeenCalled();
+    expect(console.timeEnd).toHaveBeenCalled();
+  });
+
+  it('should call log when required', function() {
+    spyOn(console, 'log');
+    model.create({ name: 'Billy', age: 31 });
+    model.find({ name: 'Billy'});
+    expect(console.log).toHaveBeenCalled();
+  });
+
+  it('should not call when it\'s disabled', function() {
+    var localmodel = new LocalModel({ debug: false });
+    var model = localmodel.addModel('TestDebug', {
+      name: LocalSchema.SchemaTypes.String
+    });
+    spyOn(console, 'log');
+    spyOn(console, 'time');
+    spyOn(console, 'timeEnd');
+    model.create({ name: 'Billy', age: 31 });
+    model.find({ name: 'Billy'});
+    expect(console.log.calls.count()).toBe(0);
+    expect(console.time.calls.count()).toBe(0);
+    expect(console.timeEnd.calls.count()).toBe(0);
+  });
+
 });
 
