@@ -16,9 +16,13 @@ var LocalSchema = function(name, schema, options) {
  * @returns {}
  */
 LocalSchema.prototype.create = function(data) {
+  this.options.debug.start('Creating ' + this.name);
   var newEntry = {};
   newEntry._id = generateUUID();
-  for (var key in this.schema) {
+  var keys = Object.keys(this.schema);
+  var total = keys.length;
+  for (var i = 0; i < total; i++) {
+    var key = keys[i];
     var value = data[key];
     if (!value && this.schema[key].default) {
       value = this.schema[key].default;
@@ -34,7 +38,7 @@ LocalSchema.prototype.create = function(data) {
 
   // Clear indices
   this.indices = null;
-
+  this.options.debug.end('Creating ' + this.name);
   return new LocalDocument(newEntry, this);
 };
 
@@ -44,6 +48,8 @@ LocalSchema.prototype.create = function(data) {
  * @returns {Array} all entries
  */
 LocalSchema.prototype.all = function() {
+  this.options.debug.start('Getting all ' + this.name + 's');
+  var _this = this;
   this.indices = this.indices || getIndices(this.name, this.options);
   var results = [];
 
@@ -52,11 +58,17 @@ LocalSchema.prototype.all = function() {
     return results;
   }
 
-  for (var i = 0; i < this.indices.length; i++) {
+  var total = this.indices.length;
+  for (var i = 0; i < total; i++) {
     var index = this.indices[i];
-    var result = JSON.parse(this.options.storage.getItem(index));
-    results.push(new LocalDocument(result, this));
+    results.push(this.options.storage.getItem(index));
   }
+  results = JSON.parse('[' + results.join(',') + ']');
+  results = results.map(function(result) {
+    return new LocalDocument(result, _this);
+  });
+
+  this.options.debug.end('Getting all ' + this.name + 's');
 
   return results;
 };
@@ -88,6 +100,7 @@ LocalSchema.prototype.findById = function(id) {
  * a number if isCount = true
  */
 LocalSchema.prototype.find = function(query, isCount) {
+  this.options.debug.start('Finding ' + this.name + 's');
   this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
     return isCount ? this.indices.length : this.all();
@@ -104,8 +117,11 @@ LocalSchema.prototype.find = function(query, isCount) {
     var entry = this.options.storage.getItem(this.indices[i]);
     var parsed = JSON.parse(entry);
     var matches = [];
+    var keys = Object.keys(query);
+    var total = keys.length;
 
     for (var key in query) {
+      //var key = keys[q];
       var queryItem = query[key];
       var isRegex = queryItem instanceof RegExp;
       var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
@@ -131,6 +147,8 @@ LocalSchema.prototype.find = function(query, isCount) {
       }
     }
   }
+
+  this.options.debug.end('Finding ' + this.name + 's');
 
   return results;
 };
@@ -170,16 +188,22 @@ LocalSchema.prototype.count = function(query) {
  * @returns {Number} the number of entries changed
  */
 LocalSchema.prototype.update = function(query, values) {
+  this.options.debug.start('Updating ' + this.name + 's');
   var entries = this.find(query);
-  for (var i = 0; i < entries.length; i++) {
+  var totalEntries = entries.length;
+  for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];
-    for (var key in this.schema) {
+    var keys = Object.keys(this.schema);
+    var total = keys.length;
+    for (var s = 0; s < total; s++) {
+      var key = keys[s];
       if (typeof values[key] !== 'undefined') {
         entry.data[key] = values[key];
       }
     }
     entry.save();
   }
+  this.options.debug.end('Updating ' + this.name + 's');
   return entries.length;
 };
 
