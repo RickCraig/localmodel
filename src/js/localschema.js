@@ -7,6 +7,7 @@ var LocalSchema = function(name, schema, options) {
   this.schema = schema;
   this.name = name;
   this.options = options;
+  this.keys = Object.keys(schema);
 };
 
 /**
@@ -19,10 +20,9 @@ LocalSchema.prototype.create = function(data) {
   this.options.debug.start('Creating ' + this.name);
   var newEntry = {};
   newEntry._id = generateUUID();
-  var keys = Object.keys(this.schema);
-  var total = keys.length;
+  var total = this.keys.length;
   for (var i = 0; i < total; i++) {
-    var key = keys[i];
+    var key = this.keys[i];
     var value = data[key];
     if (!value && this.schema[key].default) {
       value = this.schema[key].default;
@@ -117,11 +117,10 @@ LocalSchema.prototype.find = function(query, isCount) {
     var entry = this.options.storage.getItem(this.indices[i]);
     var parsed = JSON.parse(entry);
     var matches = [];
-    var keys = Object.keys(query);
-    var total = keys.length;
+    var total = this.keys.length;
 
-    for (var key in query) {
-      //var key = keys[q];
+    for (var q = 0; q < total; q++) {
+      var key = this.keys[q];
       var queryItem = query[key];
       var isRegex = queryItem instanceof RegExp;
       var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
@@ -193,10 +192,9 @@ LocalSchema.prototype.update = function(query, values) {
   var totalEntries = entries.length;
   for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];
-    var keys = Object.keys(this.schema);
-    var total = keys.length;
+    var total = this.keys.length;
     for (var s = 0; s < total; s++) {
-      var key = keys[s];
+      var key = this.keys[s];
       if (typeof values[key] !== 'undefined') {
         entry.data[key] = values[key];
       }
