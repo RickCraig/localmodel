@@ -14,6 +14,10 @@ var LocalModel = function(options) {
   if (!this.options.storage) {
     this.options.storage = localStorage;
   }
+
+  this.options.debug = new LocalDebug({
+    enabled: !!options.debug
+  });
 };
 
 /**
