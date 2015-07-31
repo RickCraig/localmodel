@@ -43,22 +43,22 @@ gulp.task('minify', function() {
     .pipe(gulp.dest('dist/js'));
 });
 
-gulp.task('patch', function() {
+var bump = function(type) {
   return gulp.src(paths.packages)
-    .pipe(bump({type: 'patch'}))
+    .pipe(bump({type: type}))
     .pipe(gulp.dest('./'));
+};
+
+gulp.task('patch', function() {
+  return bump('patch');
 });
 
 gulp.task('minor', function() {
-  return gulp.src(paths.packages)
-    .pipe(bump({type: 'minor'}))
-    .pipe(gulp.dest('./'));
+  return bump('minor');
 });
 
 gulp.task('major', function() {
-  return gulp.src(paths.packages)
-    .pipe(bump({type: 'major'}))
-    .pipe(gulp.dest('./'));
+  return bump('major');
 });
 
 gulp.task('tag', function() {
