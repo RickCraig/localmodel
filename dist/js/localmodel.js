@@ -169,6 +169,8 @@ LocalDebug.prototype.log = function() {
 
 
 
+/* jshint undef:true */
+
 /**
  * Local Document constructor
  * @public
@@ -280,6 +282,8 @@ LocalDocument.prototype.remove = function() {
 
 
 
+/* jshint undef:true */
+
 /**
  * LocalModel constructor
  * @public
@@ -330,6 +334,8 @@ LocalModel.prototype.model = function(name) {
 };
 
 
+
+/* jshint undef:true */
 
 /**
  * Local Schema constructor

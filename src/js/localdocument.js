@@ -1,5 +1,7 @@
 'use strict';
 
+/* jshint undef:true */
+
 /**
  * Local Document constructor
  * @public
