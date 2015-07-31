@@ -5,6 +5,7 @@
  */
 var LocalDocument = function(data, schema) {
   this.schema = schema;
+  this.schema.options.debug.start('Instantiating entry');
   this.data = {};
   this.indexKey = getKey(schema.name, data._id);
 
@@ -14,7 +15,9 @@ var LocalDocument = function(data, schema) {
   }
 
   // Try to force the schema type
-  for (var key in schema.schema) {
+  var total = schema.keys.length;
+  for (var i = 0; i < total; i++) {
+    var key = schema.keys[i];
     var property = data[key];
 
     property = LocalDocument.convert(key, property, schema.schema);
@@ -23,6 +26,7 @@ var LocalDocument = function(data, schema) {
       this.data[key] = property;
     }
   }
+  this.schema.options.debug.end('Instantiating entry');
 };
 
 /**
@@ -64,9 +68,12 @@ LocalDocument.convert = function(key, property, schema) {
  * @public
  */
 LocalDocument.prototype.save = function() {
+  this.schema.options.debug.start('Saving entry');
   // Build the object to save
   var toBeSaved = {};
-  for (var key in this.schema.schema) {
+  var total = this.schema.keys.length;
+  for (var i = 0; i < total; i++) {
+    var key = this.schema.keys[i];
     toBeSaved[key] = this.data[key];
   }
   toBeSaved._id = this.data._id;
@@ -76,6 +83,7 @@ LocalDocument.prototype.save = function() {
     .options
     .storage
     .setItem(itemKey, JSON.stringify(toBeSaved));
+  this.schema.options.debug.end('Saving entry');
 };
 
 /**
@@ -83,6 +91,7 @@ LocalDocument.prototype.save = function() {
  * @public
  */
 LocalDocument.prototype.remove = function() {
+  this.schema.options.debug.start('Removing entry');
   // Remove the key from indices
   removeIndex(
     this.schema.name,
@@ -95,4 +104,5 @@ LocalDocument.prototype.remove = function() {
 
   // Allow the schema to update
   this.schema.indices = null;
+  this.schema.options.debug.end('Removing entry');
 };
