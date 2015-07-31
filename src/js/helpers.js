@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Checks if an object is empty
  * @private

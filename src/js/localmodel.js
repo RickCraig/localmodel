@@ -1,3 +1,7 @@
+'use strict';
+
+/* jshint undef:true */
+
 /**
  * LocalModel constructor
  * @public

@@ -6,6 +6,9 @@
 
 'use strict';
 
+
+
+
 /**
  * Checks if an object is empty
  * @private
@@ -35,6 +38,8 @@ var containsFalse = function(arr) {
   }
   return false;
 };
+
+
 
 /**
  * Generates a random UUID
@@ -123,6 +128,8 @@ var removeIndex = function(model, key, options) {
   }
 };
 
+
+
 /**
  * LocalDebug constructor
  */
@@ -159,6 +166,10 @@ LocalDebug.prototype.log = function() {
   if (!this.options.enabled) { return; }
   console.log('[LocalModel]', arguments);
 };
+
+
+
+/* jshint undef:true */
 
 /**
  * Local Document constructor
@@ -269,6 +280,10 @@ LocalDocument.prototype.remove = function() {
   this.schema.options.debug.end('Removing entry');
 };
 
+
+
+/* jshint undef:true */
+
 /**
  * LocalModel constructor
  * @public
@@ -317,6 +332,10 @@ LocalModel.prototype.model = function(name) {
   }
   return this.models[name];
 };
+
+
+
+/* jshint undef:true */
 
 /**
  * Local Schema constructor
@@ -425,6 +444,40 @@ LocalSchema.prototype.findById = function(id) {
     ), this);
 };
 
+
+/**
+ * Looks through the schema for an entry
+ * @private
+ * @param {Object} entry - the parsed entry
+ * @param {Object} query
+ * @returns {Array} an array of matches
+ */
+LocalSchema.prototype.checkEntry = function(entry, query) {
+  var total = this.keys.length;
+  var matches = [];
+  for (var q = 0; q < total; q++) {
+    var key = this.keys[q];
+    var queryItem = query[key];
+    if (typeof queryItem === 'undefined') {
+      continue;
+    }
+
+    var isRegex = queryItem instanceof RegExp;
+    var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
+    if (!isRegex && (queryItem === '' || checkEmpty)) {
+      continue;
+    }
+
+    if (entry[key]) {
+      matches.push(matchQuery(
+        LocalDocument.convert(key, entry[key], this.schema),
+        queryItem
+      ));
+    }
+  }
+  return matches;
+};
+
 /**
  * Find entries matching a query
  * @public
@@ -450,29 +503,7 @@ LocalSchema.prototype.find = function(query, isCount) {
   for (var i = 0; i < this.indices.length; i++) {
     var entry = this.options.storage.getItem(this.indices[i]);
     var parsed = JSON.parse(entry);
-    var matches = [];
-    var total = this.keys.length;
-
-    for (var q = 0; q < total; q++) {
-      var key = this.keys[q];
-      var queryItem = query[key];
-      if (typeof queryItem === 'undefined') {
-        continue;
-      }
-
-      var isRegex = queryItem instanceof RegExp;
-      var checkEmpty = typeof queryItem === 'object' && isEmpty(queryItem);
-      if (!isRegex && (queryItem === '' || checkEmpty)) {
-        continue;
-      }
-
-      if (parsed[key]) {
-        matches.push(matchQuery(
-          LocalDocument.convert(key, parsed[key], this.schema),
-          queryItem
-        ));
-      }
-    }
+    var matches = this.checkEntry(parsed, query);
 
     if (matches.length > 0 && !containsFalse(matches)) {
       if (!isCount) {
@@ -555,6 +586,62 @@ LocalSchema.SchemaTypes = {
   Date: 'date'
 };
 
+
+
+/**
+ * Handle date
+ * @private
+ * @param {Object} data
+ * @param {Object} query
+ * @param {Boolean} isDate
+ * @returns {Boolean} true if matched
+ */
+var handleSums = function(data, query, isDate) {
+  var dateMatches = [];
+
+  if (query.$gte) {
+    var gte = isDate ? new Date(query.$gte) : query.$gte;
+    dateMatches.push(gte <= data);
+  }
+
+  if (query.$gt) {
+    var gt = isDate ? new Date(query.$gt) : query.$gt;
+    dateMatches.push(gt < data);
+  }
+
+  if (query.$lte) {
+    var lte = isDate ? new Date(query.$lte) : query.$lte;
+    dateMatches.push(lte >= data);
+  }
+
+  if (query.$lt) {
+    var lt = isDate ? new Date(query.$lt) : query.$lt;
+    dateMatches.push(lt > data);
+  }
+
+  return !containsFalse(dateMatches);
+};
+
+/**
+ * Handles the object
+ * @private
+ * @param {Object} data
+ * @param {Object} query
+ * @returns {Boolean} true if there is a match
+ */
+var handleQueryObject = function(data, query) {
+  // Do the business in here for $gte, $gt, $lte, $lt
+
+  if (typeof data === 'number') {
+    return handleSums(data, query);
+  }
+
+  if (data instanceof Date) {
+    return handleSums(data, query, true);
+  }
+
+};
+
 /**
  * Takes in a data string and returns
  * true if query matches
@@ -577,52 +664,6 @@ var matchQuery = function(data, query) {
     }
 
   if (typeof query === 'object') {
-    // Do the business in here for $gte, $gt, $lte, $lt
-    // Remember to tag this 0.0.2
-
-
-    if (typeof data === 'number') {
-      var numberMatches = [];
-      if (query.$gte) {
-        numberMatches.push(query.$gte <= data);
-      }
-
-      if (query.$gt) {
-        numberMatches.push(query.$gt < data);
-      }
-
-      if (query.$lte) {
-        numberMatches.push(query.$lte >= data);
-      }
-
-      if (query.$lt) {
-        numberMatches.push(query.$lt > data);
-      }
-
-      return !containsFalse(numberMatches);
-    }
-
-    if (data instanceof Date) {
-      var dateMatches = [];
-
-      if (query.$gte) {
-        dateMatches.push(new Date(query.$gte) <= data);
-      }
-
-      if (query.$gt) {
-        dateMatches.push(new Date(query.$gt) < data);
-      }
-
-      if (query.$lte) {
-        dateMatches.push(new Date(query.$lte) >= data);
-      }
-
-      if (query.$lt) {
-        dateMatches.push(new Date(query.$lt) > data);
-      }
-
-      return !containsFalse(dateMatches);
-    }
-
+    return handleQueryObject(data, query);
   }
 };

@@ -8,6 +8,7 @@ var gulp = require('gulp'),
   tag = require('gulp-tag-version'),
   concat = require('gulp-concat'),
   runSequence = require('run-sequence'),
+  replace = require('gulp-replace'),
   jip = require('jasmine-istanbul-phantom');
 
 var paths = {
@@ -27,6 +28,8 @@ gulp.task('test', function (done) {
 
 gulp.task('concat', function() {
   return gulp.src(paths.scripts)
+    .pipe(replace(/'use strict';/g, ''))
+    .pipe(replace(/\/\/ use strict/g, '\'use strict\';'))
     .pipe(concat('localmodel.js'))
     .pipe(gulp.dest('dist/js'));
 });
@@ -68,11 +71,25 @@ gulp.task('release', function() {
 });
 
 gulp.task('release-patch', function() {
-  runSequence('concat', 'lint', 'test', 'concat', ['bump-patch', 'minify'], 'tag');
+  runSequence(
+    'concat',
+    'lint',
+    'test',
+    'concat',
+    ['bump-patch', 'minify'],
+    'tag'
+  );
 });
 
 gulp.task('release-minor', function() {
-  runSequence('concat', 'lint', 'test', 'concat', ['bump-minor', 'minify'], 'tag');
+  runSequence(
+    'concat',
+    'lint',
+    'test',
+    'concat',
+    ['bump-minor', 'minify'],
+    'tag'
+  );
 });
 
 gulp.task('release-major', function() {
