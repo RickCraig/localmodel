@@ -35,7 +35,6 @@ LocalSchema.prototype.addToSchema = function(property) {
  * @returns {}
  */
 LocalSchema.prototype.create = function(data) {
-  this.options.debug.start('Creating ' + this.name);
   var newEntry = {};
   newEntry._id = generateUUID();
   var total = this.keys.length;
@@ -56,7 +55,6 @@ LocalSchema.prototype.create = function(data) {
 
   // Clear indices
   this.indices = null;
-  this.options.debug.end('Creating ' + this.name);
   return new LocalDocument(newEntry, this);
 };
 
@@ -66,7 +64,6 @@ LocalSchema.prototype.create = function(data) {
  * @returns {Array} all entries
  */
 LocalSchema.prototype.all = function() {
-  this.options.debug.start('Getting all ' + this.name + 's');
   var _this = this;
   this.indices = this.indices || getIndices(this.name, this.options);
   var results = [];
@@ -85,8 +82,6 @@ LocalSchema.prototype.all = function() {
   results = results.map(function(result) {
     return new LocalDocument(result, _this);
   });
-
-  this.options.debug.end('Getting all ' + this.name + 's');
 
   return results;
 };
@@ -152,7 +147,6 @@ LocalSchema.prototype.checkEntry = function(entry, query) {
  * a number if isCount = true
  */
 LocalSchema.prototype.find = function(query, isCount) {
-  this.options.debug.start('Finding ' + this.name + 's');
   this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
     return isCount ? this.indices.length : this.all();
@@ -179,7 +173,6 @@ LocalSchema.prototype.find = function(query, isCount) {
     }
   }
 
-  this.options.debug.end('Finding ' + this.name + 's');
   this.options.debug.log(results.length + ' results found');
 
   return results;
@@ -220,7 +213,6 @@ LocalSchema.prototype.count = function(query) {
  * @returns {Number} the number of entries changed
  */
 LocalSchema.prototype.update = function(query, values) {
-  this.options.debug.start('Updating ' + this.name + 's');
   var entries = this.find(query);
   var totalEntries = entries.length;
   for (var i = 0; i < totalEntries; i++) {
@@ -234,7 +226,6 @@ LocalSchema.prototype.update = function(query, values) {
     }
     entry.save();
   }
-  this.options.debug.end('Updating ' + this.name + 's');
   return entries.length;
 };
 

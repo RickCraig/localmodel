@@ -482,14 +482,6 @@ describe('debug', function() {
     name: LocalSchema.SchemaTypes.String
   });
 
-  it('should call time and timeEnd to profile a complicated method', function() {
-    spyOn(console, 'time');
-    spyOn(console, 'timeEnd');
-    model.create({ name: 'Billy', age: 31 });
-    expect(console.time).toHaveBeenCalled();
-    expect(console.timeEnd).toHaveBeenCalled();
-  });
-
   it('should call log when required', function() {
     spyOn(console, 'log');
     model.create({ name: 'Billy', age: 31 });
@@ -503,13 +495,9 @@ describe('debug', function() {
       name: LocalSchema.SchemaTypes.String
     });
     spyOn(console, 'log');
-    spyOn(console, 'time');
-    spyOn(console, 'timeEnd');
     model.create({ name: 'Billy', age: 31 });
     model.find({ name: 'Billy'});
     expect(console.log.calls.count()).toBe(0);
-    expect(console.time.calls.count()).toBe(0);
-    expect(console.timeEnd.calls.count()).toBe(0);
   });
 
 });

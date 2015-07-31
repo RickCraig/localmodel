@@ -9,7 +9,6 @@
  */
 var LocalDocument = function(data, schema) {
   this.schema = schema;
-  this.schema.options.debug.start('Instantiating entry');
   this.data = {};
   this.indexKey = getKey(schema.name, data._id);
 
@@ -30,7 +29,6 @@ var LocalDocument = function(data, schema) {
       this.data[key] = property;
     }
   }
-  this.schema.options.debug.end('Instantiating entry');
 };
 
 /**
@@ -72,7 +70,6 @@ LocalDocument.convert = function(key, property, schema) {
  * @public
  */
 LocalDocument.prototype.save = function() {
-  this.schema.options.debug.start('Saving entry');
   // Build the object to save
   var toBeSaved = {};
   var total = this.schema.keys.length;
@@ -87,7 +84,6 @@ LocalDocument.prototype.save = function() {
     .options
     .storage
     .setItem(itemKey, JSON.stringify(toBeSaved));
-  this.schema.options.debug.end('Saving entry');
 };
 
 /**
@@ -95,7 +91,6 @@ LocalDocument.prototype.save = function() {
  * @public
  */
 LocalDocument.prototype.remove = function() {
-  this.schema.options.debug.start('Removing entry');
   // Remove the key from indices
   removeIndex(
     this.schema.name,
@@ -108,5 +103,4 @@ LocalDocument.prototype.remove = function() {
 
   // Allow the schema to update
   this.schema.indices = null;
-  this.schema.options.debug.end('Removing entry');
 };
