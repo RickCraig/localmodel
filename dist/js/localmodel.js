@@ -39,6 +39,48 @@ var containsFalse = function(arr) {
   return false;
 };
 
+/**
+ * Overwrites obj1's values with obj2's and adds obj2's if non existent in obj1
+ * @private
+ * @param {Object} obj1
+ * @param {Object} obj2
+ * @returns {Object} obj1 and obj2 merged
+ */
+function merge(obj1, obj2) {
+  var obj3 = {};
+  var obj1Keys = Object.keys(obj1);
+  var obj2Keys = Object.keys(obj2);
+  for (var a = 0; a < obj1Keys.length; a++) {
+    obj3[obj1Keys[a]] = obj1[obj1Keys[a]];
+  }
+  for (var b = 0; b < obj2Keys.length; b++) {
+    obj3[obj1Keys[b]] = obj2[obj1Keys[b]];
+  }
+  return obj3;
+}
+
+/**
+ * Checks an object or array for LocalDocuments
+ * @private
+ * @param {Object/Array} check
+ * @returns {Boolean} true if it contains a LocalDocument
+ */
+var containsLocalDocument = function(check) {
+  if (check instanceof LocalDocument) {
+    return true;
+  }
+
+  if (check instanceof Array) {
+    for (var i = 0; i < check.length; i++) {
+      if (check[i] instanceof LocalDocument) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
 
 
 /**
@@ -139,26 +181,6 @@ var LocalDebug = function(options) {
 };
 
 /**
- * Start point for a profile
- * @private
- * @param {String} name
- */
-LocalDebug.prototype.start = function(name) {
-  if (!this.options.enabled) { return; }
-  console.time(name);
-};
-
-/**
- * End point for a profile
- * @private
- * @param {String} name - should match the relevant start name
- */
-LocalDebug.prototype.end = function(name) {
-  if (!this.options.enabled) { return; }
-  console.timeEnd(name);
-};
-
-/**
  * Simple logging
  * @private
  */
@@ -178,12 +200,13 @@ LocalDebug.prototype.log = function() {
  */
 var LocalDocument = function(data, schema) {
   this.schema = schema;
-  this.schema.options.debug.start('Instantiating entry');
   this.data = {};
+  this.original = {};
   this.indexKey = getKey(schema.name, data._id);
 
   // Add ID
   if (data._id) {
+    this.original._id = data._id;
     this.data._id = data._id;
   }
 
@@ -196,10 +219,10 @@ var LocalDocument = function(data, schema) {
     property = LocalDocument.convert(key, property, schema.schema);
 
     if (property) {
+      this.original[key] = property;
       this.data[key] = property;
     }
   }
-  this.schema.options.debug.end('Instantiating entry');
 };
 
 /**
@@ -241,13 +264,19 @@ LocalDocument.convert = function(key, property, schema) {
  * @public
  */
 LocalDocument.prototype.save = function() {
-  this.schema.options.debug.start('Saving entry');
   // Build the object to save
   var toBeSaved = {};
   var total = this.schema.keys.length;
   for (var i = 0; i < total; i++) {
     var key = this.schema.keys[i];
-    toBeSaved[key] = this.data[key];
+
+    // Check this.data[key] doesn't contain a local document,
+    // if it does, ignore it, because it's a populate!
+    if (!containsLocalDocument(this.data[key])) {
+      toBeSaved[key] = this.data[key];
+    } else {
+      toBeSaved[key] = this.original[key];
+    }
   }
   toBeSaved._id = this.data._id;
 
@@ -256,7 +285,83 @@ LocalDocument.prototype.save = function() {
     .options
     .storage
     .setItem(itemKey, JSON.stringify(toBeSaved));
-  this.schema.options.debug.end('Saving entry');
+};
+
+/**
+ * Used to populate a property with the
+ * relative entry/entries from another model
+ * @public
+ * @param {String} names - the referring property names
+ * @param {Object} includes - the properties to include
+ * from the other model
+ * @param {Object} options
+ */
+LocalDocument.prototype.populate = function(names, includes, options) {
+  // http://mongoosejs.com/docs/populate.html
+  var split = names.split(' ');
+
+  for (var n = 0; n < split.length; n++) {
+    var name = split[n];
+    // Check the 'name' has a ref property in the schema
+    var ref = this.schema.schema[name].ref;
+    if (!ref) {
+      console.error('The name ' + name + ' does not have a ref');
+      return;
+    }
+
+    // Use the ref to get the other model localModel.model(ref)
+    var model = this.schema.core.model(ref);
+
+    // default uses the _id as the foreign key
+    var query = { _id: this.data[name] };
+
+    // allow the user to set a custom foreign key
+    var foreignKey = this.schema.schema[name].foreignKey;
+    if (foreignKey) {
+      query = {};
+      query[foreignKey] = this.data[name];
+    }
+
+    if (options && options.match) {
+      // Merge the match object with the query object;
+      query = merge(options.match, query);
+    }
+
+    // Do a find on the model from this name
+    var related = model.find(query);
+
+    if (related.length > 0) {
+
+      if (options) {
+
+        // Options:
+        // - sorting: like mongoose
+        // - limit
+        // - match: allows you to add extra query to it,
+        // for example, you could show only the relations over 10
+
+        // Sorting: pass a sort function
+        if (options.sort && typeof options.sort === 'function') {
+          related.sort(options.sort);
+        }
+
+        // Set the limit if set
+        if (
+          options.limit &&
+          typeof options.limit === 'number' &&
+          related.length > options.limit
+        ) {
+          related = related.splice(0, options.limit);
+        }
+
+      }
+
+      this.data[name] = related.length === 1 ? related[0] : related;
+    }
+  }
+
+  return this.data;
+
 };
 
 /**
@@ -264,7 +369,6 @@ LocalDocument.prototype.save = function() {
  * @public
  */
 LocalDocument.prototype.remove = function() {
-  this.schema.options.debug.start('Removing entry');
   // Remove the key from indices
   removeIndex(
     this.schema.name,
@@ -277,7 +381,6 @@ LocalDocument.prototype.remove = function() {
 
   // Allow the schema to update
   this.schema.indices = null;
-  this.schema.options.debug.end('Removing entry');
 };
 
 
@@ -314,7 +417,7 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
-  var model = new LocalSchema(name, schema, this.options);
+  var model = new LocalSchema(name, schema, this, this.options);
   this.models[name] = model;
   return model;
 };
@@ -342,11 +445,13 @@ LocalModel.prototype.model = function(name) {
  * @public
  * @param {Object} schema
  */
-var LocalSchema = function(name, schema, options) {
+var LocalSchema = function(name, schema, core, options) {
   this.schema = schema;
   this.name = name;
   this.options = options;
+  this.core = core;
   this.keys = Object.keys(schema);
+  this.keys.push('_id');
 };
 
 /**
@@ -361,6 +466,7 @@ LocalSchema.prototype.addToSchema = function(property) {
     this.schema[newKeys[i]] = property[newKeys[i]];
   }
   this.keys = Object.keys(this.schema);
+  this.keys.push('_id');
 };
 
 /**
@@ -370,7 +476,6 @@ LocalSchema.prototype.addToSchema = function(property) {
  * @returns {}
  */
 LocalSchema.prototype.create = function(data) {
-  this.options.debug.start('Creating ' + this.name);
   var newEntry = {};
   newEntry._id = generateUUID();
   var total = this.keys.length;
@@ -391,7 +496,6 @@ LocalSchema.prototype.create = function(data) {
 
   // Clear indices
   this.indices = null;
-  this.options.debug.end('Creating ' + this.name);
   return new LocalDocument(newEntry, this);
 };
 
@@ -401,7 +505,6 @@ LocalSchema.prototype.create = function(data) {
  * @returns {Array} all entries
  */
 LocalSchema.prototype.all = function() {
-  this.options.debug.start('Getting all ' + this.name + 's');
   var _this = this;
   this.indices = this.indices || getIndices(this.name, this.options);
   var results = [];
@@ -420,8 +523,6 @@ LocalSchema.prototype.all = function() {
   results = results.map(function(result) {
     return new LocalDocument(result, _this);
   });
-
-  this.options.debug.end('Getting all ' + this.name + 's');
 
   return results;
 };
@@ -455,6 +556,7 @@ LocalSchema.prototype.findById = function(id) {
 LocalSchema.prototype.checkEntry = function(entry, query) {
   var total = this.keys.length;
   var matches = [];
+
   for (var q = 0; q < total; q++) {
     var key = this.keys[q];
     var queryItem = query[key];
@@ -487,7 +589,6 @@ LocalSchema.prototype.checkEntry = function(entry, query) {
  * a number if isCount = true
  */
 LocalSchema.prototype.find = function(query, isCount) {
-  this.options.debug.start('Finding ' + this.name + 's');
   this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
     return isCount ? this.indices.length : this.all();
@@ -514,7 +615,6 @@ LocalSchema.prototype.find = function(query, isCount) {
     }
   }
 
-  this.options.debug.end('Finding ' + this.name + 's');
   this.options.debug.log(results.length + ' results found');
 
   return results;
@@ -555,7 +655,6 @@ LocalSchema.prototype.count = function(query) {
  * @returns {Number} the number of entries changed
  */
 LocalSchema.prototype.update = function(query, values) {
-  this.options.debug.start('Updating ' + this.name + 's');
   var entries = this.find(query);
   var totalEntries = entries.length;
   for (var i = 0; i < totalEntries; i++) {
@@ -569,7 +668,6 @@ LocalSchema.prototype.update = function(query, values) {
     }
     entry.save();
   }
-  this.options.debug.end('Updating ' + this.name + 's');
   return entries.length;
 };
 

@@ -7,11 +7,13 @@
  * @public
  * @param {Object} schema
  */
-var LocalSchema = function(name, schema, options) {
+var LocalSchema = function(name, schema, core, options) {
   this.schema = schema;
   this.name = name;
   this.options = options;
+  this.core = core;
   this.keys = Object.keys(schema);
+  this.keys.push('_id');
 };
 
 /**
@@ -26,6 +28,7 @@ LocalSchema.prototype.addToSchema = function(property) {
     this.schema[newKeys[i]] = property[newKeys[i]];
   }
   this.keys = Object.keys(this.schema);
+  this.keys.push('_id');
 };
 
 /**
@@ -115,6 +118,7 @@ LocalSchema.prototype.findById = function(id) {
 LocalSchema.prototype.checkEntry = function(entry, query) {
   var total = this.keys.length;
   var matches = [];
+
   for (var q = 0; q < total; q++) {
     var key = this.keys[q];
     var queryItem = query[key];

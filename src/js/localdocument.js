@@ -10,10 +10,12 @@
 var LocalDocument = function(data, schema) {
   this.schema = schema;
   this.data = {};
+  this.original = {};
   this.indexKey = getKey(schema.name, data._id);
 
   // Add ID
   if (data._id) {
+    this.original._id = data._id;
     this.data._id = data._id;
   }
 
@@ -26,6 +28,7 @@ var LocalDocument = function(data, schema) {
     property = LocalDocument.convert(key, property, schema.schema);
 
     if (property) {
+      this.original[key] = property;
       this.data[key] = property;
     }
   }
@@ -75,7 +78,14 @@ LocalDocument.prototype.save = function() {
   var total = this.schema.keys.length;
   for (var i = 0; i < total; i++) {
     var key = this.schema.keys[i];
-    toBeSaved[key] = this.data[key];
+
+    // Check this.data[key] doesn't contain a local document,
+    // if it does, ignore it, because it's a populate!
+    if (!containsLocalDocument(this.data[key])) {
+      toBeSaved[key] = this.data[key];
+    } else {
+      toBeSaved[key] = this.original[key];
+    }
   }
   toBeSaved._id = this.data._id;
 
@@ -84,6 +94,83 @@ LocalDocument.prototype.save = function() {
     .options
     .storage
     .setItem(itemKey, JSON.stringify(toBeSaved));
+};
+
+/**
+ * Used to populate a property with the
+ * relative entry/entries from another model
+ * @public
+ * @param {String} names - the referring property names
+ * @param {Object} includes - the properties to include
+ * from the other model
+ * @param {Object} options
+ */
+LocalDocument.prototype.populate = function(names, includes, options) {
+  // http://mongoosejs.com/docs/populate.html
+  var split = names.split(' ');
+
+  for (var n = 0; n < split.length; n++) {
+    var name = split[n];
+    // Check the 'name' has a ref property in the schema
+    var ref = this.schema.schema[name].ref;
+    if (!ref) {
+      console.error('The name ' + name + ' does not have a ref');
+      return;
+    }
+
+    // Use the ref to get the other model localModel.model(ref)
+    var model = this.schema.core.model(ref);
+
+    // default uses the _id as the foreign key
+    var query = { _id: this.data[name] };
+
+    // allow the user to set a custom foreign key
+    var foreignKey = this.schema.schema[name].foreignKey;
+    if (foreignKey) {
+      query = {};
+      query[foreignKey] = this.data[name];
+    }
+
+    if (options && options.match) {
+      // Merge the match object with the query object;
+      query = merge(options.match, query);
+    }
+
+    // Do a find on the model from this name
+    var related = model.find(query);
+
+    if (related.length > 0) {
+
+      if (options) {
+
+        // Options:
+        // - sorting: like mongoose
+        // - limit
+        // - match: allows you to add extra query to it,
+        // for example, you could show only the relations over 10
+
+        // Sorting: pass a sort function
+        if (options.sort && typeof options.sort === 'function') {
+          related.sort(options.sort);
+        }
+
+        // Set the limit if set
+        if (
+          options.limit &&
+          typeof options.limit === 'number' &&
+          related.length > options.limit
+        ) {
+          related = related.splice(0, options.limit);
+        }
+
+      }
+
+      this.data[name] = related.length === 1 ? related[0] : related;
+    }
+  }
+
+  return this.data;
+
 };
 
 /**
