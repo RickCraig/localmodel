@@ -23,8 +23,8 @@ describe('Generic LocalDocument', function() {
   it('should parse a date when type is date', function() {
 
     var first = model.create({ created: Date.now() });
-    var searched = model.findById(first.data._id);
-    expect(searched.data.created instanceof Date).toBe(true);
+    var searched = model.findById(first._id);
+    expect(searched.created instanceof Date).toBe(true);
   });
 
   it('should set the type to string when type is missing', function() {
@@ -33,8 +33,8 @@ describe('Generic LocalDocument', function() {
       test: {}
     });
     var first = testModel.create({ test: 'foo' });
-    var searched = testModel.findById(first.data._id);
-    expect(typeof searched.data.test).toBe('string');
+    var searched = testModel.findById(first._id);
+    expect(typeof searched.test).toBe('string');
   });
 
 });
@@ -96,8 +96,8 @@ describe('create', function() {
     });
     var indices = localStorage.getItem('TestCreate-index');
     var parsed = JSON.parse(indices);
-    var saved = localStorage.getItem(parsed[0]);
-    expect(saved).toBe(JSON.stringify(test.data));
+    var saved = JSON.parse(localStorage.getItem(parsed[0]));
+    expect(saved.name).toBe(test.name);
   });
 
 });
@@ -136,8 +136,8 @@ describe('findById', function() {
   it('should return the exact entry by ID', function() {
     localStorage.clear();
     var billy = model.create({ name: 'Billy' });
-    var result = model.findById(billy.data._id);
-    expect(result.data.name).toBe('Billy');
+    var result = model.findById(billy._id);
+    expect(result.name).toBe('Billy');
   });
 
   it('should return null when the ID isn\'t found', function() {
@@ -326,7 +326,7 @@ describe('Save', function() {
   it('should save the changes made to localstorage', function() {
     localStorage.clear();
     var human = model.create({ age: 31 });
-    human.data.age = 35;
+    human.age = 35;
     human.save();
     var indices = localStorage.getItem('TestSave-index');
     var parsed = JSON.parse(indices);
@@ -339,7 +339,7 @@ describe('Save', function() {
   it('should not save data that is not in the schema', function() {
     localStorage.clear();
     var human = model.create({ age: 31 });
-    human.data.name = 'Sammy';
+    human.name = 'Sammy';
     human.save();
     var indices = localStorage.getItem('TestSave-index');
     var parsed = JSON.parse(indices);
@@ -381,8 +381,8 @@ describe('Default values', function() {
     localStorage.clear();
     var sammy = model.create({ name: 'Sammy' });
     model.addToSchema({ age: { type: LocalSchema.SchemaTypes.Number, default: 10 } });
-    var searched = model.findById(sammy.data._id);
-    expect(searched.data.age).toBe(10);
+    var searched = model.findById(sammy._id);
+    expect(searched.age).toBe(10);
   });
 });
 
@@ -417,8 +417,8 @@ describe('update', function() {
     model.create({ name: 'Sammy', age: 25 });
     model.update({ age: 31 }, { active: true });
     var humans = model.find({ age: 31 });
-    expect(humans[0].data.active).toBe(true);
-    expect(humans[1].data.active).toBe(true);
+    expect(humans[0].active).toBe(true);
+    expect(humans[1].active).toBe(true);
   });
 
   it('should return the amount of entries updated', function() {

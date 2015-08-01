@@ -43,6 +43,10 @@ LocalSchema.prototype.create = function(data) {
   var total = this.keys.length;
   for (var i = 0; i < total; i++) {
     var key = this.keys[i];
+    if (key === '_id') {
+      continue;
+    }
+
     var value = data[key];
     if (!value && this.schema[key].default) {
       value = this.schema[key].default;
@@ -225,7 +229,7 @@ LocalSchema.prototype.update = function(query, values) {
     for (var s = 0; s < total; s++) {
       var key = this.keys[s];
       if (typeof values[key] !== 'undefined') {
-        entry.data[key] = values[key];
+        entry[key] = values[key];
       }
     }
     entry.save();
