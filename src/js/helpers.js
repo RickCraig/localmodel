@@ -71,3 +71,21 @@ var containsLocalDocument = function(check) {
 
   return false;
 };
+
+/**
+ * Converts a LocalDocument to object
+ * @private
+ * @param {Object} entries
+ * @param {Array} select - an array of properties
+ * @returns {Array} an array of filtered entries
+ */
+var selectFromEntries = function(entries, select) {
+  return entries.map(function(entry) {
+    var mapped = {};
+    // Show only the fields in select
+    for (var i = 0; i < select.length; i++) {
+      mapped[select[i]] = entry[select[i]];
+    }
+    return mapped;
+  });
+};

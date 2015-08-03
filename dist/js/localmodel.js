@@ -81,6 +81,24 @@ var containsLocalDocument = function(check) {
   return false;
 };
 
+/**
+ * Converts a LocalDocument to object
+ * @private
+ * @param {Object} entries
+ * @param {Array} select - an array of properties
+ * @returns {Array} an array of filtered entries
+ */
+var selectFromEntries = function(entries, select) {
+  return entries.map(function(entry) {
+    var mapped = {};
+    // Show only the fields in select
+    for (var i = 0; i < select.length; i++) {
+      mapped[select[i]] = entry[select[i]];
+    }
+    return mapped;
+  });
+};
+
 
 
 /**
@@ -301,6 +319,12 @@ LocalDocument.prototype.populate = function(names, options) {
 
   for (var n = 0; n < split.length; n++) {
     var name = split[n];
+    // Check the name exists
+    if (!this._schema.schema[name]) {
+      console.warn('The property ' + name + ' doesn\'t exist in this schema');
+      continue;
+    }
+
     // Check the 'name' has a ref property in the schema
     var ref = this._schema.schema[name].ref;
     if (!ref) {
@@ -347,17 +371,14 @@ LocalDocument.prototype.populate = function(names, options) {
           related = related.splice(0, options.limit);
         }
 
+        var select;
         if (options.select) {
-          var select = options.select.split(' ');
-          related = related.map(function(entry) {
-            var mapped = {};
-            // Show only the fields in select
-            for (var i = 0; i < select.length; i++) {
-              mapped[select[i]] = entry[select[i]];
-            }
-            return mapped;
-          });
+          select = options.select.split(' ');
+        } else {
+          select = model.keys;
         }
+
+        related = selectFromEntries(related, select);
 
       }
 
@@ -666,6 +687,9 @@ LocalSchema.prototype.count = function(query) {
 LocalSchema.prototype.update = function(query, values) {
   var entries = this.find(query);
   var totalEntries = entries.length;
+  if (totalEntries < 1) {
+    return [];
+  }
   for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];
     var total = this.keys.length;
@@ -678,6 +702,27 @@ LocalSchema.prototype.update = function(query, values) {
     entry.save();
   }
   return entries.length;
+};
+
+/**
+ * Finds and the populates the results
+ * @public
+ * @param {Object} query
+ * @param {String} names - space seperated
+ * @param {Object} options
+ * @returns {Array} of populated results
+ */
+LocalSchema.prototype.findAndPopulate = function(query, names, options) {
+  var entries = this.find(query);
+  var totalEntries = entries.length;
+  if (totalEntries < 1) {
+    return [];
+  }
+  var populated = [];
+  for (var i = 0; i < totalEntries; i++) {
+    populated.push(entries[i].populate(names, options));
+  }
+  return populated;
 };
 
 /**

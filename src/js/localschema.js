@@ -223,6 +223,9 @@ LocalSchema.prototype.count = function(query) {
 LocalSchema.prototype.update = function(query, values) {
   var entries = this.find(query);
   var totalEntries = entries.length;
+  if (totalEntries < 1) {
+    return [];
+  }
   for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];
     var total = this.keys.length;
@@ -235,6 +238,27 @@ LocalSchema.prototype.update = function(query, values) {
     entry.save();
   }
   return entries.length;
+};
+
+/**
+ * Finds and the populates the results
+ * @public
+ * @param {Object} query
+ * @param {String} names - space seperated
+ * @param {Object} options
+ * @returns {Array} of populated results
+ */
+LocalSchema.prototype.findAndPopulate = function(query, names, options) {
+  var entries = this.find(query);
+  var totalEntries = entries.length;
+  if (totalEntries < 1) {
+    return [];
+  }
+  var populated = [];
+  for (var i = 0; i < totalEntries; i++) {
+    populated.push(entries[i].populate(names, options));
+  }
+  return populated;
 };
 
 /**

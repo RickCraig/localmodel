@@ -110,6 +110,12 @@ LocalDocument.prototype.populate = function(names, options) {
 
   for (var n = 0; n < split.length; n++) {
     var name = split[n];
+    // Check the name exists
+    if (!this._schema.schema[name]) {
+      console.warn('The property ' + name + ' doesn\'t exist in this schema');
+      continue;
+    }
+
     // Check the 'name' has a ref property in the schema
     var ref = this._schema.schema[name].ref;
     if (!ref) {
@@ -156,17 +162,14 @@ LocalDocument.prototype.populate = function(names, options) {
           related = related.splice(0, options.limit);
         }
 
+        var select;
         if (options.select) {
-          var select = options.select.split(' ');
-          related = related.map(function(entry) {
-            var mapped = {};
-            // Show only the fields in select
-            for (var i = 0; i < select.length; i++) {
-              mapped[select[i]] = entry[select[i]];
-            }
-            return mapped;
-          });
+          select = options.select.split(' ');
+        } else {
+          select = model.keys;
         }
+
+        related = selectFromEntries(related, select);
 
       }
 
