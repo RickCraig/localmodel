@@ -118,10 +118,10 @@ var human = localmodel.addModel({
 This will set the isAlive property to true by default, this will simply be overwritten when the isAlive property is given a value:
 ```javascript
 var sammy = human.create({ name: 'Sammy' });
-console.log(sammy.data.isAlive); // true
+console.log(sammy.isAlive); // true
 
 var billy = human.create({ name: 'Billy', isAlive: false });
-console.log(billy.data.isAlive); // false
+console.log(billy.isAlive); // false
 ```
 
 ### Getting a model
@@ -209,7 +209,7 @@ var specificHuman = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 Data returned from the ```.all()``` and ```.find()``` is returned in an array. Data returned from a ```.findById``` is returned as a single object. Individual objects are instances of ```LocalDocument``` which house the data inside a property named 'data'...
 ```javascript
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
-console.log('Rick\'s age is: ' + rick.data.age);
+console.log('Rick\'s age is: ' + rick.age);
 ```
 
 ### Saving an updated entry
@@ -218,7 +218,7 @@ You can alter a LocalDocument data object and save it using the ```.save()``` me
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 
 // Change the age and save it
-rick.data.age = 32;
+rick.age = 32;
 rick.save();
 ```
 
@@ -263,6 +263,10 @@ gulp test
 ```
 
 ## Change Log
+v0.4.0
+- Added populate feature
+- Removed .data from local document
+
 v0.3.1
 - Minor optimisations
 
@@ -293,5 +297,4 @@ v0.0.2:
 ## To Do
 - Optimise/Refactor
 - Add references/relationships to other models
-- Add Populate (similar to Mongoose)
 - Add a basic aggregate function
