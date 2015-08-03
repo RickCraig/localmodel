@@ -295,7 +295,7 @@ LocalDocument.prototype.save = function() {
  * from the other model
  * @param {Object} options
  */
-LocalDocument.prototype.populate = function(names, includes, options) {
+LocalDocument.prototype.populate = function(names, options) {
   // http://mongoosejs.com/docs/populate.html
   var split = names.split(' ');
 
@@ -333,12 +333,6 @@ LocalDocument.prototype.populate = function(names, includes, options) {
 
       if (options) {
 
-        // Options:
-        // - sorting: like mongoose
-        // - limit
-        // - match: allows you to add extra query to it,
-        // for example, you could show only the relations over 10
-
         // Sorting: pass a sort function
         if (options.sort && typeof options.sort === 'function') {
           related.sort(options.sort);
@@ -351,6 +345,18 @@ LocalDocument.prototype.populate = function(names, includes, options) {
           related.length > options.limit
         ) {
           related = related.splice(0, options.limit);
+        }
+
+        if (options.select) {
+          var select = options.select.split(' ');
+          related = related.map(function(entry) {
+            var mapped = {};
+            // Show only the fields in select
+            for (var i = 0; i < select.length; i++) {
+              mapped[select[i]] = entry[select[i]];
+            }
+            return mapped;
+          });
         }
 
       }
@@ -480,6 +486,10 @@ LocalSchema.prototype.create = function(data) {
   var total = this.keys.length;
   for (var i = 0; i < total; i++) {
     var key = this.keys[i];
+    if (key === '_id') {
+      continue;
+    }
+
     var value = data[key];
     if (!value && this.schema[key].default) {
       value = this.schema[key].default;
@@ -662,7 +672,7 @@ LocalSchema.prototype.update = function(query, values) {
     for (var s = 0; s < total; s++) {
       var key = this.keys[s];
       if (typeof values[key] !== 'undefined') {
-        entry.data[key] = values[key];
+        entry[key] = values[key];
       }
     }
     entry.save();
