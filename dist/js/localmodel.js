@@ -1,3 +1,4 @@
+(function(window) {
 /*!
  * LocalModel
  * Developer: Rick Craig
@@ -54,7 +55,7 @@ function merge(obj1, obj2) {
     obj3[obj1Keys[a]] = obj1[obj1Keys[a]];
   }
   for (var b = 0; b < obj2Keys.length; b++) {
-    obj3[obj1Keys[b]] = obj2[obj1Keys[b]];
+    obj3[obj2Keys[b]] = obj2[obj2Keys[b]];
   }
   return obj3;
 }
@@ -65,17 +66,9 @@ function merge(obj1, obj2) {
  * @param {Object/Array} check
  * @returns {Boolean} true if it contains a LocalDocument
  */
-var containsLocalDocument = function(check) {
-  if (check instanceof LocalDocument) {
+var containsArray = function(check) {
+  if (check instanceof Object || check instanceof Array) {
     return true;
-  }
-
-  if (check instanceof Array) {
-    for (var i = 0; i < check.length; i++) {
-      if (check[i] instanceof LocalDocument) {
-        return true;
-      }
-    }
   }
 
   return false;
@@ -289,7 +282,7 @@ LocalDocument.prototype.save = function() {
 
     // Check this[key] doesn't contain a local document,
     // if it does, ignore it, because it's a populate!
-    if (!containsLocalDocument(this[key])) {
+    if (!containsArray(this[key])) {
       toBeSaved[key] = this[key];
     } else {
       toBeSaved[key] = this._original[key];
@@ -688,7 +681,7 @@ LocalSchema.prototype.update = function(query, values) {
   var entries = this.find(query);
   var totalEntries = entries.length;
   if (totalEntries < 1) {
-    return [];
+    return 0;
   }
   for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];
@@ -819,3 +812,9 @@ var matchQuery = function(data, query) {
     return handleQueryObject(data, query);
   }
 };
+
+window.LocalModel = LocalModel;
+window.LocalSchema = LocalSchema;
+window.LocalDocument = LocalDocument;
+
+}(window));

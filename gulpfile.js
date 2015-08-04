@@ -9,7 +9,8 @@ var gulp = require('gulp'),
   concat = require('gulp-concat'),
   runSequence = require('run-sequence'),
   replace = require('gulp-replace'),
-  jip = require('jasmine-istanbul-phantom');
+  jip = require('jasmine-istanbul-phantom'),
+  insert = require('gulp-insert');
 
 var paths = {
   scripts: 'src/js/*.js',
@@ -27,10 +28,16 @@ gulp.task('test', function (done) {
 });
 
 gulp.task('concat', function() {
+  var closureStart = '(function(window) {\n';
+  var closureEnd = '\nwindow.LocalModel = LocalModel;\n' +
+    'window.LocalSchema = LocalSchema;\nwindow.LocalDocument ' +
+    '= LocalDocument;\n\n}(window));'
   return gulp.src(paths.scripts)
     .pipe(replace(/'use strict';/g, ''))
     .pipe(replace(/\/\/ use strict/g, '\'use strict\';'))
     .pipe(concat('localmodel.js'))
+    .pipe(insert.prepend(closureStart))
+    .pipe(insert.append(closureEnd))
     .pipe(gulp.dest('dist/js'));
 });
 
