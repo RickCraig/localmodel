@@ -3,6 +3,9 @@
 
 LocalModel allows you to use a simple model structure to utilise localstorage. Its based loosely on the basic functionality of [Mongoose for node](http://mongoosejs.com/).
 
+## Status
+This library is currently under construction. I would advice against using it until it has been finished and tested thoroughly. I will updated this status when the time comes!
+
 ## Installation
 There are multiple ways of installing LocalModel.
 
