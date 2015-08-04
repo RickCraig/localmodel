@@ -224,7 +224,7 @@ LocalSchema.prototype.update = function(query, values) {
   var entries = this.find(query);
   var totalEntries = entries.length;
   if (totalEntries < 1) {
-    return [];
+    return 0;
   }
   for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];

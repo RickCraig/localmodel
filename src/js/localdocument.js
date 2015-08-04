@@ -80,7 +80,7 @@ LocalDocument.prototype.save = function() {
 
     // Check this[key] doesn't contain a local document,
     // if it does, ignore it, because it's a populate!
-    if (!containsLocalDocument(this[key])) {
+    if (!containsArray(this[key])) {
       toBeSaved[key] = this[key];
     } else {
       toBeSaved[key] = this._original[key];

@@ -45,7 +45,7 @@ function merge(obj1, obj2) {
     obj3[obj1Keys[a]] = obj1[obj1Keys[a]];
   }
   for (var b = 0; b < obj2Keys.length; b++) {
-    obj3[obj1Keys[b]] = obj2[obj1Keys[b]];
+    obj3[obj2Keys[b]] = obj2[obj2Keys[b]];
   }
   return obj3;
 }
@@ -56,17 +56,9 @@ function merge(obj1, obj2) {
  * @param {Object/Array} check
  * @returns {Boolean} true if it contains a LocalDocument
  */
-var containsLocalDocument = function(check) {
-  if (check instanceof LocalDocument) {
+var containsArray = function(check) {
+  if (check instanceof Object || check instanceof Array) {
     return true;
-  }
-
-  if (check instanceof Array) {
-    for (var i = 0; i < check.length; i++) {
-      if (check[i] instanceof LocalDocument) {
-        return true;
-      }
-    }
   }
 
   return false;
