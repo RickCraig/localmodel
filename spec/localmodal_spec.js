@@ -5,10 +5,12 @@ localStorage.clear()
 describe('Generic LocalModel', function() {
 
   it('should console.warn when Storage is undefined', function() {
+    var _storage = Storage;
     Storage = undefined;
     spyOn(console, 'warn');
     var localmodel = new LocalModel();
     expect(console.warn).toHaveBeenCalled();
+    Storage = _storage;
   });
 
 });
@@ -332,7 +334,6 @@ describe('Save', function() {
     var parsed = JSON.parse(indices);
     var saved = localStorage.getItem(parsed[0]);
     saved = JSON.parse(saved);
-    console.log(saved.age);
     expect(saved.age).toBe(35);
   });
 
@@ -429,6 +430,13 @@ describe('update', function() {
     var updated = model.update({ age: 31 }, { active: true });
     expect(updated).toBe(2);
   });
+
+  it('should return an empty array when nothing is found', function() {
+    localStorage.clear();
+    model.indices = null;
+    var updated = model.update({ age: 31 }, { name: 'Test' });
+    expect(updated).toBe(0);
+  });
 });
 
 describe('remove', function() {
@@ -501,4 +509,162 @@ describe('debug', function() {
   });
 
 });
+
+describe('populate', function() {
+
+  var testCar;
+  var testEngine;
+  var testExtra;
+  var engine;
+  var am;
+
+  beforeEach(function(done) {
+    var localmodel = new LocalModel();
+    testCar = localmodel.addModel('TestCar', {
+      name: LocalSchema.SchemaTypes.String,
+      engine: { type: LocalSchema.SchemaTypes.String, ref: 'TestEngine' },
+      pack: {
+        type: LocalSchema.SchemaTypes.String,
+        ref: 'TestExtra',
+        foreignKey: 'pack'
+      }
+    });
+    testEngine = localmodel.addModel('TestEngine', {
+      name: LocalSchema.SchemaTypes.String,
+      cc: LocalSchema.SchemaTypes.Number
+    });
+    testExtra = localmodel.addModel('TestExtra', {
+      name: LocalSchema.SchemaTypes.String,
+      pack: LocalSchema.SchemaTypes.String,
+      cost: LocalSchema.SchemaTypes.Number
+    });
+
+    engine = testEngine.create({
+      name: 'V12 6.0',
+      cc: 5996
+    });
+
+    testExtra.create({ name: 'Mud Flaps', pack: 'protection', cost: 20 });
+    testExtra.create({ name: 'Rubber Mats', pack: 'protection', cost: 35 });
+    testExtra.create({ name: 'Scotch Guard', pack: 'protection', cost: 15 });
+
+    am = testCar.create({
+      name: 'Aston Martin DB9 GT',
+      engine: engine._id,
+      pack: 'protection'
+    });
+    done();
+  });
+
+  afterEach(function() {
+    localStorage.clear();
+    testCar.indices = null;
+  });
+
+
+  it('should populate single field when a single name is given', function() {
+    var car = testCar.findById(am._id);
+    car.populate('engine');
+    expect(typeof car.engine).toBe('object');
+    expect(typeof car.pack).toBe('string');
+  });
+
+  it('should populate multiple fields when space seperated names are given', function() {
+    var car = testCar.findById(am._id);
+    car.populate('engine pack');
+    expect(typeof car.engine).toBe('object');
+    expect(typeof car.pack).toBe('object');
+  });
+
+  it('should return a warning when a name is not valid', function() {
+    var car = testCar.findById(am._id);
+    spyOn(console, 'warn');
+    car.populate('wheels');
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('should return an error when a name has no ref', function() {
+    var car = testCar.findById(am._id);
+    spyOn(console, 'error');
+    car.populate('name');
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should use _id by default for a foreign key', function() {
+    var car = testCar.findById(am._id);
+    car.populate('engine');
+    expect(car.engine.name).toBe(engine.name);
+  });
+
+  it('should use a foreign key when set', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack');
+    expect(car.pack.length).toBe(3);
+  });
+
+  it('should populate with an object when single item found', function() {
+    var car = testCar.findById(am._id);
+    car.populate('engine');
+    expect(car.engine instanceof Object).toBe(true);
+  });
+
+  it('should populate with an array when multiple items are found', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack');
+    expect(car.pack instanceof Array).toBe(true);
+  });
+
+  it('should add additional match requirements to the query when set', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack', { match: { name: 'Mud Flaps' } });
+    expect(car.pack instanceof Object).toBe(true);
+  });
+
+  it('should sort using a sort function passed', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack', {
+      sort: function(a, b) {
+        return a.name < b.name ? -1 : 1;
+      }
+    });
+    expect(car.pack[0].name).toBe('Mud Flaps');
+    expect(car.pack[1].name).toBe('Rubber Mats');
+    expect(car.pack[2].name).toBe('Scotch Guard');
+  });
+
+  it('should limit the populated when limit is set', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack', { limit: 2 });
+    expect(car.pack.length).toBe(2);
+  });
+
+  it('should only return the selected properties in a populated object when select is set', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack', { select: 'name' });
+    expect(Object.keys(car.pack[0]).join(',')).toBe('name');
+  });
+
+  it('should save with the original, not the populated', function() {
+    var car = testCar.findById(am._id);
+    car.populate('pack');
+    car.save();
+
+    var saved = testCar.findById(am._id);
+    expect(typeof saved.pack).toBe('string');
+  });
+
+  describe('findAndPopulate', function() {
+    it('should return an empty array when no entries are found', function() {
+      var cars = testCar.findAndPopulate({ name: 'Vauxhall Corsa' }, 'pack');
+      expect(cars.length).toBe(0);
+    });
+
+    it('should return an array of populated entries', function() {
+      var cars = testCar.findAndPopulate({}, 'pack');
+      expect(cars[0].pack.length).toBe(3);
+    });
+  });
+
+});
+
 
