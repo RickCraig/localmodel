@@ -32,7 +32,7 @@ var LocalModel = function(options) {
  * @returns {Object} the schema;
  */
 LocalModel.prototype.addModel = function(name, schema) {
-  var model = new LocalSchema(name, schema, this.options);
+  var model = new LocalSchema(name, schema, this, this.options);
   this.models[name] = model;
   return model;
 };

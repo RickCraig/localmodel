@@ -7,11 +7,13 @@
  * @public
  * @param {Object} schema
  */
-var LocalSchema = function(name, schema, options) {
+var LocalSchema = function(name, schema, core, options) {
   this.schema = schema;
   this.name = name;
   this.options = options;
+  this.core = core;
   this.keys = Object.keys(schema);
+  this.keys.push('_id');
 };
 
 /**
@@ -26,6 +28,7 @@ LocalSchema.prototype.addToSchema = function(property) {
     this.schema[newKeys[i]] = property[newKeys[i]];
   }
   this.keys = Object.keys(this.schema);
+  this.keys.push('_id');
 };
 
 /**
@@ -40,6 +43,10 @@ LocalSchema.prototype.create = function(data) {
   var total = this.keys.length;
   for (var i = 0; i < total; i++) {
     var key = this.keys[i];
+    if (key === '_id') {
+      continue;
+    }
+
     var value = data[key];
     if (!value && this.schema[key].default) {
       value = this.schema[key].default;
@@ -115,6 +122,7 @@ LocalSchema.prototype.findById = function(id) {
 LocalSchema.prototype.checkEntry = function(entry, query) {
   var total = this.keys.length;
   var matches = [];
+
   for (var q = 0; q < total; q++) {
     var key = this.keys[q];
     var queryItem = query[key];
@@ -215,18 +223,42 @@ LocalSchema.prototype.count = function(query) {
 LocalSchema.prototype.update = function(query, values) {
   var entries = this.find(query);
   var totalEntries = entries.length;
+  if (totalEntries < 1) {
+    return 0;
+  }
   for (var i = 0; i < totalEntries; i++) {
     var entry = entries[i];
     var total = this.keys.length;
     for (var s = 0; s < total; s++) {
       var key = this.keys[s];
       if (typeof values[key] !== 'undefined') {
-        entry.data[key] = values[key];
+        entry[key] = values[key];
       }
     }
     entry.save();
   }
   return entries.length;
+};
+
+/**
+ * Finds and the populates the results
+ * @public
+ * @param {Object} query
+ * @param {String} names - space seperated
+ * @param {Object} options
+ * @returns {Array} of populated results
+ */
+LocalSchema.prototype.findAndPopulate = function(query, names, options) {
+  var entries = this.find(query);
+  var totalEntries = entries.length;
+  if (totalEntries < 1) {
+    return [];
+  }
+  var populated = [];
+  for (var i = 0; i < totalEntries; i++) {
+    populated.push(entries[i].populate(names, options));
+  }
+  return populated;
 };
 
 /**

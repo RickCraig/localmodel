@@ -3,6 +3,9 @@
 
 LocalModel allows you to use a simple model structure to utilise localstorage. Its based loosely on the basic functionality of [Mongoose for node](http://mongoosejs.com/).
 
+## Status
+This library is currently under construction. I would advice against using it until it has been finished and tested thoroughly. I will updated this status when the time comes!
+
 ## Installation
 There are multiple ways of installing LocalModel.
 
@@ -41,6 +44,8 @@ This will cover the basic usage of LocalModel:
 - [Saving an updated entry](#saving-an-updated-entry)
 - [Batch Update](#batch-update)
 - [Removing/Deleting](#removingdeleting)
+- [Population](#population)
+- [Find and populate](#find-and-populate)
 
 ### Basic Setup
 LocalModel needs to be instantiated. At the moment there are no options to pass:
@@ -118,10 +123,10 @@ var human = localmodel.addModel({
 This will set the isAlive property to true by default, this will simply be overwritten when the isAlive property is given a value:
 ```javascript
 var sammy = human.create({ name: 'Sammy' });
-console.log(sammy.data.isAlive); // true
+console.log(sammy.isAlive); // true
 
 var billy = human.create({ name: 'Billy', isAlive: false });
-console.log(billy.data.isAlive); // false
+console.log(billy.isAlive); // false
 ```
 
 ### Getting a model
@@ -209,7 +214,7 @@ var specificHuman = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 Data returned from the ```.all()``` and ```.find()``` is returned in an array. Data returned from a ```.findById``` is returned as a single object. Individual objects are instances of ```LocalDocument``` which house the data inside a property named 'data'...
 ```javascript
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
-console.log('Rick\'s age is: ' + rick.data.age);
+console.log('Rick\'s age is: ' + rick.age);
 ```
 
 ### Saving an updated entry
@@ -218,7 +223,7 @@ You can alter a LocalDocument data object and save it using the ```.save()``` me
 var rick = human.findById('af6fa5c5-e197-4e59-a04a-58d8af366554');
 
 // Change the age and save it
-rick.data.age = 32;
+rick.age = 32;
 rick.save();
 ```
 
@@ -246,6 +251,172 @@ human.remove();
 ```
 The ```LocalModal.remove()``` function returns the number of entries removed
 
+### Population
+Population allows you to add a relationship between one model and another. To add a relation property just add a ref property to the configuration of a schema property.
+```javascript
+var Brand = localmodel,addModel('Brand', {
+  name: LocalSchema.SchemaTypes.String,
+  logo: LocalSchema.SchemaTypes.String
+});
+
+var Car = localmodel.addModel('Car', {
+  model: LocalSchema.SchemaTypes.String
+  brand: { type: LocalSchema.SchemaTypes.String, ref: 'Brand' }
+});
+```
+The ref property takes a string, the name of the related model. By default the ref will use the _id of the related model as the foreign key. This means that when you populate a Car entry it will replace the property with an object.
+```javascript
+var aston = Brand.create({
+  name: 'Aston Martin',
+  logo: 'http://cdn.astonmartin.com/icons/logos/aml-logo-medium.png'
+});
+
+var dbNine = Car.create({ model: 'DB9 GT', brand: aston._id });
+
+console.log(dbNine.populate('brand'));
+```
+Logs:
+```javascript
+// Basic object
+{
+  model: 'DB9 GT',
+  brand: {
+    _id: 'af6fa5c5-e197-4e59-a04a-58d8af366554',
+    name: 'Aston Martin',
+    logo: 'http://cdn.astonmartin.com/icons/logos/aml-logo-medium.png'
+  }
+}
+```
+Adding a foreign key to the property configuration will use a different property on the related to model to be used to populate:
+```javascript
+var Extra = localmodel.create('Extra', {
+  pack: LocalSchema.SchemaTypes.String,
+  name: LocalSchema.SchemaTypes.String,
+  cost: LocalSchema.SchemaTypes.Number
+});
+
+var Car = localmodel.addModel('Car', {
+  model: LocalSchema.SchemaTypes.String
+  pack: { type: LocalSchema.SchemaTypes.String, ref: 'Extra', foreignKey: 'pack' }
+});
+```
+When using a foreign key you open up the possibility of replacing the property with an array, because more than one entry in the related model could have a matching property:
+```javascript
+Extra.create({ name: 'Mud Flaps', pack: 'protection', cost: 20 });
+Extra.create({ name: 'Rubber Mats', pack: 'protection', cost: 35 });
+Extra.create({ name: 'Scotch Guard', pack: 'protection', cost: 15 });
+
+var dbNine = Car.create({ model: 'DB9 GT', pack: 'protection' });
+console.log(dbNine.populate('pack'));
+```
+Logs:
+```javascript
+// Basic object
+{
+  model: 'DB9 GT',
+  pack: [
+    {
+      _id: 'af6fa5c5-e197-4e59-a04a-58d8af366554',
+      name: 'Mud Flaps',
+      pack: 'protection',
+      cost: 20
+    },
+    {
+      _id: 'af6fa5c5-e197-4e59-a04a-58d8af444355',
+      name: 'Rubber Mats',
+      pack: 'protection',
+      cost: 35
+    },
+    {
+      _id: 'af6fa5c5-e197-4e59-a04a-58d8af948829',
+      name: 'Scotch Guard',
+      pack: 'protection',
+      cost: 15
+    }
+  ]
+}
+```
+You can also name multiple properties to populate using a space separated string.
+```javascript
+// This will populate relatedProp and otherRelated properties
+exampleThing.populate('relatedProp otherRelated');
+```
+#### Options
+There a few options that will make using the populate feature more functional:
+##### Match
+match will allow you to add more conditions to returning related properties, this uses the same query logic as the find function.
+```javascript
+// This will only populate with extras that cost over 18
+dbNine.populate('pack', {
+  match: { cost: { $gt: 18 } }
+});
+```
+##### Sort
+To sort the populated data just pass in a [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort):
+```javascript
+dbNine.populate('pack', {
+  sort: function(a, b) {
+    return a.cost > b.cost ? 1 : -1;
+  }
+});
+```
+##### Limit
+If you would like to limit the populated data just pass limit with a number.
+```javascript
+dbNine.populate('pack', {
+  limit: 2
+});
+```
+##### Select
+If you wish to only populate with selected properties from the related model, use the select option. To add multiple selections just use a space separated string:
+```javascript
+dbNine.populate('pack', {
+  select: 'cost name'
+});
+```
+
+### Find and populate
+Find an populate works on exactly the same principle as [population](#population) but allows you to find an array of entries and batch populate them. It accepts the same options as LocalDocument.populate();
+```javascript
+Extra.create({ name: 'Mud Flaps', pack: 'protection', cost: 20 });
+Extra.create({ name: 'Rubber Mats', pack: 'protection', cost: 35 });
+Extra.create({ name: 'Scotch Guard', pack: 'protection', cost: 15 });
+
+Car.create({ model: 'DB9 GT', pack: 'protection' });
+Car.create({ model: 'DB9', pack: 'protection' });
+
+var dbNines = Car.findAndPopulate({ name: /DB9/ }, 'pack', { limit: 1 });
+console.log(dbNines);
+```
+Logs:
+```
+// Basic objects
+[
+  {
+    model: 'DB9 GT',
+    pack: [
+      {
+        _id: 'af6fa5c5-e197-4e59-a04a-58d8af366554',
+        name: 'Mud Flaps',
+        pack: 'protection',
+        cost: 20
+      }
+    ]
+  },
+  {
+    model: 'DB9',
+    pack: [
+      {
+        _id: 'af6fa5c5-e197-4e59-a04a-58d8af366554',
+        name: 'Mud Flaps',
+        pack: 'protection',
+        cost: 20
+      }
+    ]
+  },
+]
+```
+
 ## ID Generation
 Each ID is generated with a mixture of the date and random number generation. Each ID will be unique and can be accessed by the ```_id``` property.
 
@@ -263,6 +434,10 @@ gulp test
 ```
 
 ## Change Log
+v0.4.0
+- Added populate feature
+- Removed .data from local document
+
 v0.3.1
 - Minor optimisations
 
@@ -293,5 +468,4 @@ v0.0.2:
 ## To Do
 - Optimise/Refactor
 - Add references/relationships to other models
-- Add Populate (similar to Mongoose)
 - Add a basic aggregate function
