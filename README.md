@@ -437,6 +437,7 @@ gulp test
 v0.4.0
 - Added populate feature
 - Removed .data from local document
+- Add references/relationships to other models
 
 v0.3.1
 - Minor optimisations
@@ -467,5 +468,4 @@ v0.0.2:
 
 ## To Do
 - Optimise/Refactor
-- Add references/relationships to other models
 - Add a basic aggregate function
