@@ -52,22 +52,22 @@ gulp.task('minify', function() {
     .pipe(gulp.dest('dist/js'));
 });
 
-var bump = function(type) {
-  return gulp.src(paths.packages)
-    .pipe(bump({type: type}))
-    .pipe(gulp.dest('./'));
-};
-
 gulp.task('patch', function() {
-  return bump('patch');
+  return gulp.src(paths.packages)
+    .pipe(bump({type: 'patch'}))
+    .pipe(gulp.dest('./'));
 });
 
 gulp.task('minor', function() {
-  return bump('minor');
+  return gulp.src(paths.packages)
+    .pipe(bump({type: 'minor'}))
+    .pipe(gulp.dest('./'));
 });
 
 gulp.task('major', function() {
-  return bump('major');
+  return gulp.src(paths.packages)
+    .pipe(bump({type: 'major'}))
+    .pipe(gulp.dest('./'));
 });
 
 gulp.task('tag', function() {
