@@ -434,6 +434,9 @@ gulp test
 ```
 
 ## Change Log
+v0.5.0
+- Add a basic aggregate function
+
 v0.4.0
 - Added populate feature
 - Removed .data from local document
@@ -468,4 +471,3 @@ v0.0.2:
 
 ## To Do
 - Optimise/Refactor
-- Add a basic aggregate function
