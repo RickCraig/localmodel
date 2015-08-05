@@ -31,12 +31,14 @@ gulp.task('concat', function() {
   var closureStart = '(function(window) {\n';
   var closureEnd = '\nwindow.LocalModel = LocalModel;\n' +
     'window.LocalSchema = LocalSchema;\nwindow.LocalDocument ' +
-    '= LocalDocument;\n\n}(window));'
+    '= LocalDocument;\n\n}(window));';
+  var startingComment = '/*!\n * LocalModel\n * Developer: Rick Craig' +
+   '\n * https://github.com/RickCraig/localmodel\n*/\n\n';
   return gulp.src(paths.scripts)
-    .pipe(replace(/'use strict';/g, ''))
-    .pipe(replace(/\/\/ use strict/g, '\'use strict\';'))
+    .pipe(replace(/'use strict';\n\n/g, ''))
     .pipe(concat('localmodel.js'))
     .pipe(insert.prepend(closureStart))
+    .pipe(insert.prepend(startingComment))
     .pipe(insert.append(closureEnd))
     .pipe(gulp.dest('dist/js'));
 });

@@ -1,14 +1,11 @@
-(function(window) {
 /*!
  * LocalModel
  * Developer: Rick Craig
  * https://github.com/RickCraig/localmodel
- */
+*/
 
+(function(window) {
 'use strict';
-
-
-
 
 /**
  * Checks if an object is empty
@@ -91,8 +88,6 @@ var selectFromEntries = function(entries, select) {
     return mapped;
   });
 };
-
-
 
 /**
  * Generates a random UUID
@@ -181,8 +176,6 @@ var removeIndex = function(model, key, options) {
   }
 };
 
-
-
 /**
  * LocalDebug constructor
  */
@@ -199,8 +192,6 @@ LocalDebug.prototype.log = function() {
   if (!this.options.enabled) { return; }
   console.log('[LocalModel]', arguments);
 };
-
-
 
 /* jshint undef:true */
 
@@ -402,8 +393,6 @@ LocalDocument.prototype.remove = function() {
   this._schema.indices = null;
 };
 
-
-
 /* jshint undef:true */
 
 /**
@@ -454,8 +443,6 @@ LocalModel.prototype.model = function(name) {
   }
   return this.models[name];
 };
-
-
 
 /* jshint undef:true */
 
@@ -730,8 +717,6 @@ LocalSchema.SchemaTypes = {
   Mixed: 'mixed',
   Date: 'date'
 };
-
-
 
 /**
  * Handle date
