@@ -262,6 +262,36 @@ LocalSchema.prototype.findAndPopulate = function(query, names, options) {
 };
 
 /**
+ * contains the ability to match and group documents
+ * @param {Array} pipeline - an array of queries
+ * @returns {Array} data reduced by the pipeline
+ */
+LocalSchema.prototype.aggregate = function(pipeline) {
+  var data = this.all();
+  var total = pipeline.length;
+  for (var i = 0; i < total; i++) {
+    var query = pipeline[i];
+    if (query.$match) {
+      // Do a filter on data
+    } else if(query.$group) {
+      // add an _id
+      // add properties (i.e. total)
+      // add $sum ability
+      // http://docs.mongodb.org/manual/reference/operator/aggregation/group/#pipe._S_group
+    } else if(query.$sort) {
+      // Sort the array
+    } else if(query.$limit) {
+      // limit the array
+    } else {
+      console.error('Aggregate currently only supports ' +
+        '$match, $group, $sort & $limit query types');
+      return;
+    }
+
+  }
+};
+
+/**
  * LocalSchema Schema Types
  * For use in validation and return
  * @public
