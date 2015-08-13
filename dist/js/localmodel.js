@@ -194,6 +194,8 @@ var removeIndex = function(model, key, options) {
   }
 };
 
+/* jshint undef:true */
+
 /**
  * Aggregate constructor
  * @private
@@ -303,7 +305,7 @@ LocalAggregate.prototype.avg = function(entry, field, key) {
 
 /**
  * Get the maximum or minimum number
-* @private
+ * @private
  * @param {Object} entry
  * @param {String} field
  * @param {String} key
@@ -319,6 +321,34 @@ LocalAggregate.prototype.minMax = function(entry, field, key, max) {
       result = max ? Math.max(result, num) : Math.min(result, num);
     }
     entry[key] = result;
+  }
+};
+
+/**
+ * Sorts the array
+ * @private
+ * @param {Array} data
+ * @param {Function} field
+ */
+LocalAggregate.prototype.sort = function(data, field) {
+  if (typeof field === 'function') {
+    data.sort(field);
+  } else {
+    console.warn('LocalModel: $sort should be a compare function');
+  }
+};
+
+/**
+ * limits the array
+ * @private
+ * @param {Array} data
+ * @param {Function} field
+ */
+LocalAggregate.prototype.limit = function(data, field) {
+  if (typeof field === 'number') {
+    data = data.slice(0, field);
+  } else {
+    console.warn('LocalModel: $limit should be a number');
   }
 };
 
@@ -874,8 +904,7 @@ LocalSchema.prototype.aggregate = function(pipeline) {
       var group = query.$group;
       var groupData = [];
       if (typeof group._id === 'undefined') {
-        console.error('the $group method must contain a _id tag');
-        return;
+        return console.error('the $group method must contain a _id tag');
       }
 
       groupData = aggregate.group(data, group);
@@ -907,11 +936,7 @@ LocalSchema.prototype.aggregate = function(pipeline) {
 
       data = groupData;
     } else if(query.$sort) {
-      if (typeof query.$sort === 'function') {
-        data.sort(query.$sort);
-      } else {
-        console.warn('LocalModel: $sort should be a compare function');
-      }
+      aggregate.sort(data, query.$sort);
     } else if(query.$limit) {
       if (typeof query.$limit === 'number') {
         data = data.slice(0, query.$limit);

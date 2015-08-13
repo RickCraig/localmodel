@@ -283,8 +283,7 @@ LocalSchema.prototype.aggregate = function(pipeline) {
       var group = query.$group;
       var groupData = [];
       if (typeof group._id === 'undefined') {
-        console.error('the $group method must contain a _id tag');
-        return;
+        return console.error('the $group method must contain a _id tag');
       }
 
       groupData = aggregate.group(data, group);
@@ -316,11 +315,7 @@ LocalSchema.prototype.aggregate = function(pipeline) {
 
       data = groupData;
     } else if(query.$sort) {
-      if (typeof query.$sort === 'function') {
-        data.sort(query.$sort);
-      } else {
-        console.warn('LocalModel: $sort should be a compare function');
-      }
+      aggregate.sort(data, query.$sort);
     } else if(query.$limit) {
       if (typeof query.$limit === 'number') {
         data = data.slice(0, query.$limit);
