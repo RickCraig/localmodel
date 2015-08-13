@@ -28,6 +28,51 @@ LocalAggregate.prototype.match = function(data, query, schema) {
 };
 
 /**
+ * Handles all of the group features
+ * @private
+ * @param {Array} data
+ * @param {Object} query
+ */
+LocalAggregate.prototype.createGroup = function(data, query) {
+  // The _id tag is mandatory
+  var group = query.$group;
+  var groupData = [];
+  var _this = this;
+  if (typeof group._id === 'undefined') {
+    return console.error('the $group method must contain a _id tag');
+  }
+
+  groupData = _this.group(data, group);
+
+  // Use group data below to add properties and counts
+  var keys = Object.keys(query.$group);
+  var totalKeys = keys.length;
+
+  for (var k = 0; k < totalKeys; k++) {
+    var key = keys[k];
+
+    if (key !== '_id') {
+
+      // Loop through results
+      var totalGrouped = groupData.length;
+      for (var ag = 0; ag < totalGrouped; ag++) {
+        var current = groupData[ag];
+
+        _this.get(current, group[key].$first, key, true);
+        _this.get(current, group[key].$last, key, false);
+        _this.sum(current, group[key].$sum, key);
+        _this.avg(current, group[key].$avg, key);
+        _this.minMax(current, group[key].$max, key, true);
+        _this.minMax(current, group[key].$min, key, false);
+
+      } // End of grouped loop
+    } // End of check for _id
+  } // End of loop through $group
+
+  data = groupData;
+};
+
+/**
  * Groups the data
  * @private
  * @param {Array} data - all the data

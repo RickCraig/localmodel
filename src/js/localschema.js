@@ -275,53 +275,13 @@ LocalSchema.prototype.aggregate = function(pipeline) {
   for (var i = 0; i < total; i++) {
     var query = pipeline[i];
     if (query.$match) {
-
       data = aggregate.match(data, query, _this);
-
     } else if(query.$group) {
-      // The _id tag is mandatory
-      var group = query.$group;
-      var groupData = [];
-      if (typeof group._id === 'undefined') {
-        return console.error('the $group method must contain a _id tag');
-      }
-
-      groupData = aggregate.group(data, group);
-
-      // Use group data below to add properties and counts
-      var keys = Object.keys(query.$group);
-      var totalKeys = keys.length;
-
-      for (var k = 0; k < totalKeys; k++) {
-        var key = keys[k];
-
-        if (key !== '_id') {
-
-          // Loop through results
-          var totalGrouped = groupData.length;
-          for (var ag = 0; ag < totalGrouped; ag++) {
-            var current = groupData[ag];
-
-            aggregate.get(current, group[key].$first, key, true);
-            aggregate.get(current, group[key].$last, key, false);
-            aggregate.sum(current, group[key].$sum, key);
-            aggregate.avg(current, group[key].$avg, key);
-            aggregate.minMax(current, group[key].$max, key, true);
-            aggregate.minMax(current, group[key].$min, key, false);
-
-          } // End of grouped loop
-        } // End of check for _id
-      } // End of loop through $group
-
-      data = groupData;
+      aggregate.createGroup();
     } else if(query.$sort) {
       aggregate.sort(data, query.$sort);
     } else if(query.$limit) {
-      if (typeof query.$limit === 'number') {
-        data = data.slice(0, query.$limit);
-      } else {
-        console.warn('LocalModel: $limit should be a number');
-      }
+      aggregate.limit(data, query.$limit);
     } else {
       console.error('LocalModel: Aggregate currently only supports ' +
         '$match, $group, $sort & $limit query types. Query ' +
