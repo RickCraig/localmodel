@@ -81,3 +81,21 @@ var selectFromEntries = function(entries, select) {
     return mapped;
   });
 };
+
+/**
+ * Checks an array for an object with key
+ * @private
+ * @param {Array} arr
+ * @param {String} key
+ * @param {String} keyword
+ * @returns {Number} -1 if not found index if found
+ */
+var findInArray = function(arr, key, keyword) {
+  var total = arr.length;
+  for (var i = 0; i < total; i++) {
+    if (arr[i][key] === keyword) {
+      return i;
+    }
+  }
+  return -1;
+};

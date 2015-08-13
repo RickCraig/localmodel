@@ -267,28 +267,156 @@ LocalSchema.prototype.findAndPopulate = function(query, names, options) {
  * @returns {Array} data reduced by the pipeline
  */
 LocalSchema.prototype.aggregate = function(pipeline) {
+  var _this = this;
   var data = this.all();
+  var totalEntries = data.length;
   var total = pipeline.length;
   for (var i = 0; i < total; i++) {
     var query = pipeline[i];
     if (query.$match) {
       // Do a filter on data
+      data = data.filter(function(entry) {
+        var matches = _this.checkEntry(entry, query.$match);
+        if (matches.length > 0 && !containsFalse(matches)) {
+          return true;
+        } else {
+          return false;
+        }
+      });
     } else if(query.$group) {
-      // add an _id
-      // add properties (i.e. total)
-      // add $sum ability
-      // http://docs.mongodb.org/manual/reference/operator/aggregation/group/#pipe._S_group
+      // The _id tag is mandatory
+      var group = query.$group;
+      var groupData = [];
+      if (typeof group._id === 'undefined') {
+        console.error('the $group method must contain a _id tag');
+        return;
+      }
+
+      var groupBy = group._id;
+      for (var g = 0; g < totalEntries; g++) {
+        var entryResult = data[g][groupBy];
+        var dataLocation = findInArray(groupData, '_id', entryResult);
+        if (dataLocation === -1) {
+          groupData.push({
+            _id: entryResult,
+            _group: [data[g]]
+          });
+          continue;
+        }
+        groupData[dataLocation]._group.push(data[g]);
+      }
+
+      // Use group data below to add properties and counts
+      var keys = Object.keys(query.$group);
+      var totalKeys = keys.length;
+
+      for (var k = 0; k < totalKeys; k++) {
+        var key = keys[k];
+
+        if (key !== '_id') {
+
+          // Loop through results
+          var totalGrouped = groupData.length;
+          for (var ag = 0; ag < totalGrouped; ag++) {
+            var current = groupData[ag];
+            var totalInGroup = current._group.length;
+
+            // Get $first
+            if (group[key].$first &&
+              current._group.length > 0) {
+              // Get the first from the results array
+              current[key] = current._group[0][group[key].$first];
+            }
+
+            // Get $last
+            if (group[key].$last &&
+              current._group.length > 0) {
+              // Get the first from the results array
+              current[key] = current
+                ._group[current._group.length-1][group[key].$last];
+            }
+
+            // Do $sum
+            if (group[key].$sum &&
+              current._group.length > 0) {
+
+              // Check if it's a number
+              if (typeof group[key].$sum === 'number') {
+                // Increment and times by number
+                current[key] = current._group.length * group[key].$sum;
+              } else {
+                // Not a number use reduce
+                current[key] = current._group.reduce(function(prev, curr) {
+                  return prev + curr[group[key].$sum];
+                }, 0);
+              }
+            }
+
+            // Get $avg
+            if (group[key].$avg &&
+              current._group.length > 0 &&
+              typeof current._group[0][group[key].$avg] === 'number') {
+              var totalToAverage = 0;
+              for (var a = 0; a < totalInGroup; a++) {
+                totalToAverage += current._group[a][group[key].$avg];
+              }
+              current[key] = totalToAverage / totalInGroup;
+            }
+
+            // Get $max
+            if (group[key].$max &&
+              current._group.length > 0 &&
+              typeof current._group[0][group[key].$max] === 'number') {
+              var max = 0;
+              for (var ma = 0; ma < totalInGroup; ma++) {
+                var maxNum = current._group[ma][group[key].$max];
+                if (maxNum > max) {
+                  max = maxNum;
+                }
+              }
+              current[key] = max;
+            }
+
+            // Get $min
+            if (group[key].$min &&
+              current._group.length > 0 &&
+              typeof current._group[0][group[key].$min] === 'number') {
+              var min = Infinity;
+              for (var mi = 0; mi < totalInGroup; mi++) {
+                var minNum = current._group[mi][group[key].$min];
+                if (minNum < min) {
+                  min = minNum;
+                }
+              }
+              current[key] = min;
+            }
+
+          } // End of grouped loop
+        } // End of check for _id
+      } // End of loop through $group
+
+      data = groupData;
     } else if(query.$sort) {
-      // Sort the array
+      if (typeof query.$sort === 'function') {
+        data.sort(query.$sort);
+      } else {
+        console.warn('LocalModel: $sort should be a compare function');
+      }
     } else if(query.$limit) {
-      // limit the array
+      if (typeof query.$limit === 'number') {
+        data = data.slice(0, query.$limit);
+      } else {
+        console.warn('LocalModel: $limit should be a number');
+      }
     } else {
-      console.error('Aggregate currently only supports ' +
-        '$match, $group, $sort & $limit query types');
+      console.error('LocalModel: Aggregate currently only supports ' +
+        '$match, $group, $sort & $limit query types. Query ' +
+        'types can not be empty.');
       return;
     }
-
   }
+
+  return data;
 };
 
 /**
