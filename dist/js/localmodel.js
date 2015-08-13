@@ -195,6 +195,135 @@ var removeIndex = function(model, key, options) {
 };
 
 /**
+ * Aggregate constructor
+ * @private
+ */
+var LocalAggregate = function() {};
+
+/**
+ * Returns matched data from an array
+ * @private
+ * @param {Array} data
+ * @param {Object} query
+ * @param {Object} schema - the schema
+ * @returns {Array} and array of matched data
+ */
+LocalAggregate.prototype.match = function(data, query, schema) {
+  return data.filter(function(entry) {
+    var matches = schema.checkEntry(entry, query.$match);
+    if (matches.length > 0 && !containsFalse(matches)) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+};
+
+/**
+ * Groups the data
+ * @private
+ * @param {Array} data - all the data
+ * @param {Object} group - the group query
+ * @returns {Array} of grouped entries
+ */
+LocalAggregate.prototype.group = function(data, group) {
+  var groupBy = group._id;
+  var grouped = [];
+  var totalEntries = data.length;
+  for (var g = 0; g < totalEntries; g++) {
+    var entryResult = data[g][groupBy];
+    var dataLocation = findInArray(grouped, '_id', entryResult);
+    if (dataLocation === -1) {
+      grouped.push({
+        _id: entryResult,
+        _group: [data[g]]
+      });
+      continue;
+    }
+    grouped[dataLocation]._group.push(data[g]);
+  }
+  return grouped;
+};
+
+/**
+ * Get the First or Last of the group
+ * @private
+ * @param {Object} entry
+ * @param {String} field
+ * @param {String} key
+ * @param {Boolean} first - true is first
+ */
+LocalAggregate.prototype.get = function(entry, field, key, first) {
+  if (field && entry._group.length > 0) {
+    var index = first ? 0 : entry._group.length-1;
+    entry[key] = entry._group[index][field];
+  }
+};
+
+/**
+ * Does the sum of all in the group
+ * @private
+ * @param {Object} entry
+ * @param {String} field
+ * @param {String} key
+ */
+LocalAggregate.prototype.sum = function(entry, field, key) {
+  if (field && entry._group.length > 0) {
+    // Check if it's a number
+    if (typeof field === 'number') {
+      // Increment and times by number
+      entry[key] = entry._group.length * field;
+    } else {
+      // Not a number use reduce
+      entry[key] = entry._group.reduce(function(prev, curr) {
+        return prev + curr[field];
+      }, 0);
+    }
+  }
+};
+
+/**
+ * Gets the average of all in the group
+ * @private
+ * @param {Object} entry
+ * @param {String} field
+ * @param {String} key
+ */
+LocalAggregate.prototype.avg = function(entry, field, key) {
+  if ( field && entry._group.length > 0 &&
+    typeof entry._group[0][field] === 'number') {
+    var totalInGroup = entry._group.length;
+    var totalToAverage = 0;
+    for (var i = 0; i < totalInGroup; i++) {
+      totalToAverage += entry._group[i][field];
+    }
+    entry[key] = totalToAverage / totalInGroup;
+  }
+};
+
+/**
+ * Get the maximum or minimum number
+* @private
+ * @param {Object} entry
+ * @param {String} field
+ * @param {String} key
+ * @param {Boolean} max - true if looking for max
+ */
+LocalAggregate.prototype.minMax = function(entry, field, key, max) {
+  if (field && entry._group.length > 0 &&
+    typeof entry._group[0][field] === 'number') {
+    var totalInGroup = entry._group.length;
+    var result = 0;
+    for (var i = 0; i < totalInGroup; i++) {
+      var num = entry._group[i][field];
+      result = max ? Math.max(result, num) : Math.min(result, num);
+    }
+    entry[key] = result;
+  }
+};
+
+
+/**
  * LocalDebug constructor
  */
 var LocalDebug = function(options) {
@@ -731,20 +860,15 @@ LocalSchema.prototype.findAndPopulate = function(query, names, options) {
 LocalSchema.prototype.aggregate = function(pipeline) {
   var _this = this;
   var data = this.all();
-  var totalEntries = data.length;
   var total = pipeline.length;
+  var aggregate = new LocalAggregate();
+
   for (var i = 0; i < total; i++) {
     var query = pipeline[i];
     if (query.$match) {
-      // Do a filter on data
-      data = data.filter(function(entry) {
-        var matches = _this.checkEntry(entry, query.$match);
-        if (matches.length > 0 && !containsFalse(matches)) {
-          return true;
-        } else {
-          return false;
-        }
-      });
+
+      data = aggregate.match(data, query, _this);
+
     } else if(query.$group) {
       // The _id tag is mandatory
       var group = query.$group;
@@ -754,19 +878,7 @@ LocalSchema.prototype.aggregate = function(pipeline) {
         return;
       }
 
-      var groupBy = group._id;
-      for (var g = 0; g < totalEntries; g++) {
-        var entryResult = data[g][groupBy];
-        var dataLocation = findInArray(groupData, '_id', entryResult);
-        if (dataLocation === -1) {
-          groupData.push({
-            _id: entryResult,
-            _group: [data[g]]
-          });
-          continue;
-        }
-        groupData[dataLocation]._group.push(data[g]);
-      }
+      groupData = aggregate.group(data, group);
 
       // Use group data below to add properties and counts
       var keys = Object.keys(query.$group);
@@ -781,77 +893,13 @@ LocalSchema.prototype.aggregate = function(pipeline) {
           var totalGrouped = groupData.length;
           for (var ag = 0; ag < totalGrouped; ag++) {
             var current = groupData[ag];
-            var totalInGroup = current._group.length;
 
-            // Get $first
-            if (group[key].$first &&
-              current._group.length > 0) {
-              // Get the first from the results array
-              current[key] = current._group[0][group[key].$first];
-            }
-
-            // Get $last
-            if (group[key].$last &&
-              current._group.length > 0) {
-              // Get the first from the results array
-              current[key] = current
-                ._group[current._group.length-1][group[key].$last];
-            }
-
-            // Do $sum
-            if (group[key].$sum &&
-              current._group.length > 0) {
-
-              // Check if it's a number
-              if (typeof group[key].$sum === 'number') {
-                // Increment and times by number
-                current[key] = current._group.length * group[key].$sum;
-              } else {
-                // Not a number use reduce
-                current[key] = current._group.reduce(function(prev, curr) {
-                  return prev + curr[group[key].$sum];
-                }, 0);
-              }
-            }
-
-            // Get $avg
-            if (group[key].$avg &&
-              current._group.length > 0 &&
-              typeof current._group[0][group[key].$avg] === 'number') {
-              var totalToAverage = 0;
-              for (var a = 0; a < totalInGroup; a++) {
-                totalToAverage += current._group[a][group[key].$avg];
-              }
-              current[key] = totalToAverage / totalInGroup;
-            }
-
-            // Get $max
-            if (group[key].$max &&
-              current._group.length > 0 &&
-              typeof current._group[0][group[key].$max] === 'number') {
-              var max = 0;
-              for (var ma = 0; ma < totalInGroup; ma++) {
-                var maxNum = current._group[ma][group[key].$max];
-                if (maxNum > max) {
-                  max = maxNum;
-                }
-              }
-              current[key] = max;
-            }
-
-            // Get $min
-            if (group[key].$min &&
-              current._group.length > 0 &&
-              typeof current._group[0][group[key].$min] === 'number') {
-              var min = Infinity;
-              for (var mi = 0; mi < totalInGroup; mi++) {
-                var minNum = current._group[mi][group[key].$min];
-                if (minNum < min) {
-                  min = minNum;
-                }
-              }
-              current[key] = min;
-            }
+            aggregate.get(current, group[key].$first, key, true);
+            aggregate.get(current, group[key].$last, key, false);
+            aggregate.sum(current, group[key].$sum, key);
+            aggregate.avg(current, group[key].$avg, key);
+            aggregate.minMax(current, group[key].$max, key, true);
+            aggregate.minMax(current, group[key].$min, key, false);
 
           } // End of grouped loop
         } // End of check for _id
