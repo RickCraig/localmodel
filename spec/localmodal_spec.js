@@ -667,4 +667,26 @@ describe('populate', function() {
 
 });
 
+describe('aggregate', function() {
+
+  it('should return matches with a match query is passed');
+  it('should return an error when no _id is passed with $group');
+  it('should group by _id when $group is passed');
+  it('should return the sum of a group when using $sum and a number');
+  it('should return to total sum of a field when using $sum and a string');
+  it('should return the average of a group of fields when using $avg');
+  it('should return the first of a group when using $first');
+  it('should return an error when a number is passed with $first');
+  it('should return the last of a group when using $last');
+  it('should return an error when a number is passed with $last');
+  it('should return the max number of a group when using $max');
+  it('should return an error when a number is passed with $max');
+  it('should return the min number of a group when using $min');
+  it('should return an error when a number is passed with $min');
+  it('should sort the array based on a compare function');
+  it('should error if anything other than a function is passed to $sort');
+  it('should limit the results array with $limit is used');
+  it('should error if anything but a number is passed with $limit');
+
+});
 
