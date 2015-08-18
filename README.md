@@ -46,6 +46,7 @@ This will cover the basic usage of LocalModel:
 - [Removing/Deleting](#removingdeleting)
 - [Population](#population)
 - [Find and populate](#find-and-populate)
+- [Aggregate](#aggregate)
 
 ### Basic Setup
 LocalModel needs to be instantiated. At the moment there are no options to pass:
@@ -417,6 +418,154 @@ Logs:
 ]
 ```
 
+### Aggregate
+The aggregate feature allows you to match, group, sort and limit results as part of a pipeline.
+
+#### $match
+Match is exactly the same as a find query, it will filter the results.
+```javascript
+var results = Car.aggregate([
+  {
+    $match: {
+      cost: { $gt: 50000 }
+    }
+  }
+]);
+```
+
+#### $group
+Group allows you to group results by a field using _id (required).
+```javascript
+var results = Car.aggregate([
+  {
+    $group: {
+      _id: 'engine'
+    }
+  }
+]);
+```
+To support $group you can add properties via the following helpers:
+
+##### $sum
+$sum has 2 uses, you can count with it or get a total of all fields in a group.
+```javascript
+// Count how many items are in the group
+var results = Car.aggregate([
+  {
+    $group: {
+      _id: 'engine',
+      count: { $sum: 1 } // Add 1 for every item in the group
+    }
+  }
+]);
+
+// Add all of the 'cost' fields to get a total cost
+var results = Car.aggregate([
+  {
+    $group: {
+      _id: 'engine',
+      count: { $sum: 'cost' } // Add all of the costs together
+    }
+  }
+]);
+```
+
+##### $first and $last
+Adds the property from the first or last item in the group.
+```javascript
+// returns the first model in the group
+var results = Car.aggregate([
+  $group: {
+    _id: 'engine',
+    model: { $first: 'model' },
+  }
+]);
+
+// returns the last cost in the group
+var results = Car.aggregate([
+  $group: {
+    _id: 'engine',
+    cost: { $last: 'cost' },
+  }
+]);
+```
+
+##### $avg
+Gets the average of all relevant fields in a group (must be a number).
+```javascript
+var results = Car.aggregate([
+  $group: {
+    _id: 'engine',
+    averageCost: { $avg: 'cost' },
+  }
+]);
+```
+
+##### $min and $max
+Gets the minimum or maximum number in a group.
+```javascript
+var results = Car.aggregate([
+  $group: {
+    _id: 'engine',
+    minCost: { $min: 'cost' },
+    maxCost: { $max: 'cost' }
+  }
+]);
+```
+
+#### $sort
+Sorts the array. Pass a compare function to sort.
+```javascript
+// Order results by cost
+var results = Car.aggregate([
+  { $match: { car: 'DB9' } },
+  {
+    $sort: function(a, b) {
+      return a.cost < b.cost ? -1 : 1;
+    }
+  }
+]);
+```
+
+#### $limit
+Limits the results to the supplied number.
+```javascript
+// Limit the results to 5
+var results = Car.aggregate([
+  { $match: { car: 'DB9' } },
+  { $limit: 5 }
+]);
+```
+
+#### Notes and examples
+Every part of the pipeline will alter the results of the previous part. For example, if a $match is called at the start that returns an array of objects that have a name, age. The next part will alter those results. If a $group is called at the start that returns an array of groups (_id, _group etc), the next part will alter the groups result.
+
+##### Example 1
+Get all cars with model 'DB9' and group them by engine, then sort by average cost.
+```javascript
+var cars = Car.aggregate([
+  { $match: { model: 'DB9' } },
+  { $group: { _id: 'engine', averageCost: { $avg: 'cost' } } },
+  {
+    $sort: function(a, b) {
+      return a.averageCost < b.averageCost ? -1 : 1;
+    }
+  }
+]);
+```
+
+##### Example 2
+Get the top 5 cars based on engine by cost.
+var topFiveMostExpensive = Car.aggregate([
+  { $group: { _id: engine, maxCost: { $max: 'cost' } } },
+  {
+    $sort: function(a, b) {
+      return a.maxCost < b.maxCost ? 1 : -1;
+    }
+  },
+  { $limit: 5 }
+]);
+
 ## ID Generation
 Each ID is generated with a mixture of the date and random number generation. Each ID will be unique and can be accessed by the ```_id``` property.
 
@@ -434,6 +583,9 @@ gulp test
 ```
 
 ## Change Log
+v0.5.0
+- Add a basic aggregate function
+
 v0.4.0
 - Added populate feature
 - Removed .data from local document
@@ -468,4 +620,4 @@ v0.0.2:
 
 ## To Do
 - Optimise/Refactor
-- Add a basic aggregate function
+- Check for LocalStorage capacity

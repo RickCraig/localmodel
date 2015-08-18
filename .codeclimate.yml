@@ -4,3 +4,4 @@ exclude_paths:
 - dist/js/localmodel.min.js
 - dist/js/localmodel.js
 - spec/*
+- gulpfile.js

@@ -262,6 +262,38 @@ LocalSchema.prototype.findAndPopulate = function(query, names, options) {
 };
 
 /**
+ * contains the ability to match and group documents
+ * @param {Array} pipeline - an array of queries
+ * @returns {Array} data reduced by the pipeline
+ */
+LocalSchema.prototype.aggregate = function(pipeline) {
+  var _this = this;
+  var data = this.all();
+  var total = pipeline.length;
+  var aggregate = new LocalAggregate();
+
+  for (var i = 0; i < total; i++) {
+    var query = pipeline[i];
+    if (query.$match) {
+      data = aggregate.match(data, query, _this);
+    } else if(query.$group) {
+      data = aggregate.createGroup(data, query);
+    } else if(query.$sort) {
+      aggregate.sort(data, query.$sort);
+    } else if(query.$limit) {
+      data = aggregate.limit(data, query.$limit);
+    } else {
+      console.error('LocalModel: Aggregate currently only supports ' +
+        '$match, $group, $sort & $limit query types. Query ' +
+        'types can not be empty.');
+      return;
+    }
+  }
+
+  return data;
+};
+
+/**
  * LocalSchema Schema Types
  * For use in validation and return
  * @public
