@@ -669,24 +669,140 @@ describe('populate', function() {
 
 describe('aggregate', function() {
 
-  it('should return matches with a match query is passed');
-  it('should return an error when no _id is passed with $group');
-  it('should group by _id when $group is passed');
-  it('should return the sum of a group when using $sum and a number');
-  it('should return to total sum of a field when using $sum and a string');
-  it('should return the average of a group of fields when using $avg');
-  it('should return the first of a group when using $first');
-  it('should return an error when a number is passed with $first');
-  it('should return the last of a group when using $last');
-  it('should return an error when a number is passed with $last');
-  it('should return the max number of a group when using $max');
-  it('should return an error when a number is passed with $max');
-  it('should return the min number of a group when using $min');
-  it('should return an error when a number is passed with $min');
-  it('should sort the array based on a compare function');
-  it('should error if anything other than a function is passed to $sort');
-  it('should limit the results array with $limit is used');
-  it('should error if anything but a number is passed with $limit');
+  var model;
+
+  beforeEach(function(done) {
+    var localmodel = new LocalModel();
+    model = localmodel.addModel('TestAggregate', {
+      name: LocalSchema.SchemaTypes.String,
+      age: LocalSchema.SchemaTypes.Number,
+      height: LocalSchema.SchemaTypes.Number
+    });
+
+    model.create({ name: 'one',  age: 12, height: 2});
+    model.create({ name: 'two',  age: 18, height: 5});
+    model.create({ name: 'three',  age: 20, height: 6});
+    model.create({ name: 'four',  age: 20, height: 5});
+    model.create({ name: 'five',  age: 30, height: 5});
+    done();
+  });
+
+  afterEach(function() {
+    localStorage.clear();
+    model.indices = null;
+  });
+
+  it('should return matches with a match query is passed', function() {
+    var results = model.aggregate([{ $match: { name: 'one' } }]);
+    expect(results.length).toBe(1);
+  });
+
+  it('should return an error when no _id is passed with $group', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $group: {} }]);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should group by _id when $group is passed', function() {
+    var results = model.aggregate([{ $group: { _id: 'age' } }]);
+    expect(results.length).toBe(4);
+  });
+
+  it('should return the sum of a group when using $sum and a number', function() {
+    var results = model.aggregate([{ $group: { _id: 'age', count: { $sum: 1 } } }]);
+    expect(results[2].count).toBe(2);
+  });
+
+  it('should return to total sum of a field when using $sum and a string', function() {
+    var results = model.aggregate([{ $group: { _id: 'age', count: { $sum: 'age' } } }]);
+    expect(results[2].count).toBe(40);
+  });
+
+  it('should return the average of a group of fields when using $avg', function() {
+    var results = model.aggregate([{ $group: { _id: 'age', count: { $avg: 'age' } } }]);
+    expect(results[2].count).toBe(20);
+  });
+
+  it('should return an error when a number is passed with $avg', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $group: { _id: 'age', name: { $avg: 1 } } }]);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should return the first of a group when using $first', function() {
+    var results = model.aggregate([{ $group: { _id: 'age', name: { $first: 'name' } } }]);
+    expect(results[2].name).toBe('three');
+  });
+
+  it('should return an error when a number is passed with $first', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $group: { _id: 'age', name: { $first: 1 } } }]);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should return the last of a group when using $last', function() {
+    var results = model.aggregate([{ $group: { _id: 'age', name: { $last: 'name' } } }]);
+    expect(results[2].name).toBe('four');
+  });
+
+  it('should return an error when a number is passed with $last', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $group: { _id: 'age', name: { $last: 1 } } }]);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should return the max number of a group when using $max', function() {
+    var results = model.aggregate([{ $group: { _id: 'height', maxAge: { $max: 'age' } } }]);
+    expect(results[1].maxAge).toBe(30);
+  });
+
+  it('should return an error when a number is passed with $max', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $group: { _id: 'age', maxAge: { $max: 1 } } }]);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should return the min number of a group when using $min', function() {
+    var results = model.aggregate([{ $group: { _id: 'height', minAge: { $min: 'age' } } }]);
+    console.log(results[1].minAge);
+    expect(results[1].minAge).toBe(18);
+  });
+
+  it('should return an error when a number is passed with $min', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $group: { _id: 'age', minAge: { $min: 1 } } }]);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('should sort the array based on a compare function', function() {
+    var results = model.aggregate([{ $match: {} }, { $sort: function(a, b) {
+      return a.height < b.height ? -1 : 1;
+    } }]);
+    expect(results[0].height).toBe(2);
+  });
+
+  it('should error if anything other than a function is passed to $sort', function() {
+    spyOn(console, 'warn');
+    var results = model.aggregate([{ $match: {} }, { $sort: 1 }]);
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('should limit the results array with $limit is used', function() {
+    var results = model.aggregate([{ $match: {} }, { $limit: 1 }]);
+    expect(results.length).toBe(1);
+  });
+
+  it('should error if anything but a number is passed with $limit', function() {
+    spyOn(console, 'warn');
+    var results = model.aggregate([{ $match: {} }, { $limit: 'test' }]);
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('should error if a non-accepted pipe variable is passed', function() {
+    spyOn(console, 'error');
+    var results = model.aggregate([{ $test: {} }]);
+    expect(console.error).toHaveBeenCalled();
+  });
 
 });
 

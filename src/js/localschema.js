@@ -277,11 +277,11 @@ LocalSchema.prototype.aggregate = function(pipeline) {
     if (query.$match) {
       data = aggregate.match(data, query, _this);
     } else if(query.$group) {
-      aggregate.createGroup();
+      data = aggregate.createGroup(data, query);
     } else if(query.$sort) {
       aggregate.sort(data, query.$sort);
     } else if(query.$limit) {
-      aggregate.limit(data, query.$limit);
+      data = aggregate.limit(data, query.$limit);
     } else {
       console.error('LocalModel: Aggregate currently only supports ' +
         '$match, $group, $sort & $limit query types. Query ' +

@@ -211,6 +211,10 @@ var LocalAggregate = function() {};
  * @returns {Array} and array of matched data
  */
 LocalAggregate.prototype.match = function(data, query, schema) {
+  if (isEmpty(query.$match)) {
+    return data;
+  }
+
   return data.filter(function(entry) {
     var matches = schema.checkEntry(entry, query.$match);
     if (matches.length > 0 && !containsFalse(matches)) {
@@ -263,7 +267,7 @@ LocalAggregate.prototype.createGroup = function(data, query) {
     } // End of check for _id
   } // End of loop through $group
 
-  data = groupData;
+  return groupData;
 };
 
 /**
@@ -337,6 +341,11 @@ LocalAggregate.prototype.sum = function(entry, field, key) {
  * @param {String} key
  */
 LocalAggregate.prototype.avg = function(entry, field, key) {
+  if (typeof field !== 'string') {
+    console.error('The $avg field must be a string');
+    return;
+  }
+
   if ( field && entry._group.length > 0 &&
     typeof entry._group[0][field] === 'number') {
     var totalInGroup = entry._group.length;
@@ -357,10 +366,15 @@ LocalAggregate.prototype.avg = function(entry, field, key) {
  * @param {Boolean} max - true if looking for max
  */
 LocalAggregate.prototype.minMax = function(entry, field, key, max) {
+  if (typeof field !== 'string') {
+    console.error('The $min & $max fields must be a string');
+    return;
+  }
+
   if (field && entry._group.length > 0 &&
     typeof entry._group[0][field] === 'number') {
     var totalInGroup = entry._group.length;
-    var result = 0;
+    var result = max ? 0 : Infinity;
     for (var i = 0; i < totalInGroup; i++) {
       var num = entry._group[i][field];
       result = max ? Math.max(result, num) : Math.min(result, num);
@@ -391,7 +405,7 @@ LocalAggregate.prototype.sort = function(data, field) {
  */
 LocalAggregate.prototype.limit = function(data, field) {
   if (typeof field === 'number') {
-    data = data.slice(0, field);
+    return data.slice(0, field);
   } else {
     console.warn('LocalModel: $limit should be a number');
   }
@@ -943,11 +957,11 @@ LocalSchema.prototype.aggregate = function(pipeline) {
     if (query.$match) {
       data = aggregate.match(data, query, _this);
     } else if(query.$group) {
-      aggregate.createGroup();
+      data = aggregate.createGroup(data, query);
     } else if(query.$sort) {
       aggregate.sort(data, query.$sort);
     } else if(query.$limit) {
-      aggregate.limit(data, query.$limit);
+      data = aggregate.limit(data, query.$limit);
     } else {
       console.error('LocalModel: Aggregate currently only supports ' +
         '$match, $group, $sort & $limit query types. Query ' +
