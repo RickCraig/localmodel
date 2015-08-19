@@ -585,6 +585,7 @@ gulp test
 ## Change Log
 v0.5.1
 - Fixed issue with find when nothing has been saved
+- Fixed falsy for create default addition
 
 v0.5.0
 - Add a basic aggregate function
