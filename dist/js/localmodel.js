@@ -837,7 +837,8 @@ LocalSchema.prototype.checkEntry = function(entry, query) {
 LocalSchema.prototype.find = function(query, isCount) {
   this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
-    return isCount ? this.indices.length : this.all();
+    var count = this.indices ? this.indices.length : 0;
+    return isCount ? count : this.all();
   }
 
   var results = isCount ? 0 : [];
