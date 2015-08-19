@@ -455,7 +455,7 @@ var LocalDocument = function(data, schema) {
 
     property = LocalDocument.convert(key, property, schema.schema);
 
-    if (property) {
+    if (typeof property !== 'undefined') {
       this._original[key] = property;
       this[key] = property;
     }
