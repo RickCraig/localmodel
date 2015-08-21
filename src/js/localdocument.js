@@ -53,7 +53,7 @@ LocalDocument.convert = function(key, property, schema) {
     }
 
     // Set the default if it exists
-    if (schema[key].default && !property) {
+    if (typeof schema[key].default !== 'undefined' && !property) {
       property = schema[key].default;
     }
   } else {

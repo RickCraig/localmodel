@@ -589,6 +589,7 @@ v0.5.1
 - Fixed falsy check on property in LocalDocument constructor
 - Added boolean to the list of acceptable query types
 - Fixed date saving
+- Fixed default when it is false (boolean)
 
 v0.5.0
 - Add a basic aggregate function

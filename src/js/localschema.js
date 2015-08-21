@@ -48,7 +48,7 @@ LocalSchema.prototype.create = function(data) {
     }
 
     var value = data[key];
-    if (value !== 'undefined' && this.schema[key].default) {
+    if (value !== 'undefined' && typeod this.schema[key].default !== 'undefined') {
       value = this.schema[key].default;
     }
     newEntry[key] = value;

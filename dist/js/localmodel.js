@@ -483,7 +483,7 @@ LocalDocument.convert = function(key, property, schema) {
     }
 
     // Set the default if it exists
-    if (schema[key].default && !property) {
+    if (typeof schema[key].default !== 'undefined' && !property) {
       property = schema[key].default;
     }
   } else {
@@ -729,7 +729,7 @@ LocalSchema.prototype.create = function(data) {
     }
 
     var value = data[key];
-    if (value !== 'undefined' && this.schema[key].default) {
+    if (value !== 'undefined' && typeod this.schema[key].default !== 'undefined') {
       value = this.schema[key].default;
     }
     newEntry[key] = value;
