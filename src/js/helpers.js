@@ -57,7 +57,8 @@ function merge(obj1, obj2) {
  * @returns {Boolean} true if it contains a LocalDocument
  */
 var containsArray = function(check) {
-  if (check instanceof Object || check instanceof Array) {
+  var isDate = check instanceof Date;
+  if (!isDate && (check instanceof Object || check instanceof Array)) {
     return true;
   }
 
