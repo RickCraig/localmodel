@@ -587,6 +587,8 @@ v0.5.1
 - Fixed issue with find when nothing has been saved
 - Fixed falsy check for create default addition
 - Fixed falsy check on property in LocalDocument constructor
+- Added boolean to the list of acceptable query types
+- Fixed date saving
 
 v0.5.0
 - Add a basic aggregate function
