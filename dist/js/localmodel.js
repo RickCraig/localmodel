@@ -729,7 +729,8 @@ LocalSchema.prototype.create = function(data) {
     }
 
     var value = data[key];
-    if (value !== 'undefined' && typeof this.schema[key].default !== 'undefined') {
+    if (typeof value === 'undefined' &&
+      typeof this.schema[key].default !== 'undefined') {
       value = this.schema[key].default;
     }
     newEntry[key] = value;
