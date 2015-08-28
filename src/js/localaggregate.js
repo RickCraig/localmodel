@@ -147,6 +147,10 @@ LocalAggregate.prototype.sum = function(entry, field, key) {
  * @param {String} key
  */
 LocalAggregate.prototype.avg = function(entry, field, key) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
   if (typeof field !== 'string') {
     console.error('The $avg field must be a string');
     return;
@@ -172,6 +176,10 @@ LocalAggregate.prototype.avg = function(entry, field, key) {
  * @param {Boolean} max - true if looking for max
  */
 LocalAggregate.prototype.minMax = function(entry, field, key, max) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
   if (typeof field !== 'string') {
     console.error('The $min & $max fields must be a string');
     return;

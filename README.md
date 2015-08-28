@@ -590,6 +590,7 @@ v0.5.1
 - Added boolean to the list of acceptable query types
 - Fixed date saving
 - Fixed default when it is false (boolean)
+- Cancel $avg and $min/$max when not being used
 
 v0.5.0
 - Add a basic aggregate function
