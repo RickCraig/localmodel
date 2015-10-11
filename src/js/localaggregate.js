@@ -111,6 +111,15 @@ LocalAggregate.prototype.group = function(data, group) {
  * @param {Boolean} first - true is first
  */
 LocalAggregate.prototype.get = function(entry, field, key, first) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
+  if (typeof field !== 'string') {
+    console.error('The first/last property must be a string');
+    return
+  }
+
   if (field && entry._group.length > 0) {
     var index = first ? 0 : entry._group.length-1;
     entry[key] = entry._group[index][field];
@@ -147,6 +156,10 @@ LocalAggregate.prototype.sum = function(entry, field, key) {
  * @param {String} key
  */
 LocalAggregate.prototype.avg = function(entry, field, key) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
   if (typeof field !== 'string') {
     console.error('The $avg field must be a string');
     return;
@@ -172,6 +185,10 @@ LocalAggregate.prototype.avg = function(entry, field, key) {
  * @param {Boolean} max - true if looking for max
  */
 LocalAggregate.prototype.minMax = function(entry, field, key, max) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
   if (typeof field !== 'string') {
     console.error('The $min & $max fields must be a string');
     return;

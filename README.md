@@ -4,7 +4,7 @@
 LocalModel allows you to use a simple model structure to utilise localstorage. Its based loosely on the basic functionality of [Mongoose for node](http://mongoosejs.com/).
 
 ## Status
-This library is currently under construction. I would advise against using it until it has been finished and tested thoroughly. I will updated this status when the time comes!
+This library is currently ready for use. Feedback is welcomed, please leave an issue if you find any bugs, or have any suggestions that will improve the library.
 
 ## Installation
 There are multiple ways of installing LocalModel.
@@ -583,6 +583,15 @@ gulp test
 ```
 
 ## Change Log
+v0.6.0
+- Fixed issue with find when nothing has been saved
+- Fixed falsy check for create default addition
+- Fixed falsy check on property in LocalDocument constructor
+- Added boolean to the list of acceptable query types
+- Fixed date saving
+- Fixed default when it is false (boolean)
+- Cancel $avg and $min/$max when not being used
+
 v0.5.0
 - Add a basic aggregate function
 

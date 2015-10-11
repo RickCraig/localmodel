@@ -40,16 +40,16 @@ gulp.task('concat', function() {
     .pipe(insert.prepend(closureStart))
     .pipe(insert.prepend(startingComment))
     .pipe(insert.append(closureEnd))
-    .pipe(gulp.dest('dist/js'));
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('minify', function() {
-  return gulp.src('dist/js/localmodel.js')
+  return gulp.src('dist/localmodel.js')
     .pipe(uglify({
       preserveComments: 'some'
     }))
     .pipe(rename('localmodel.min.js'))
-    .pipe(gulp.dest('dist/js'));
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('patch', function() {
@@ -106,14 +106,14 @@ gulp.task('release-major', function() {
 });
 
 gulp.task('lint', function() {
-  return gulp.src('dist/js/localmodel.js')
+  return gulp.src('dist/localmodel.js')
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'));
 });
 
 gulp.task('watch', function() {
   gulp.watch(paths.scripts, ['concat']);
-  gulp.watch('dist/js/localmodel.js', ['lint']);
+  gulp.watch('dist/localmodel.js', ['lint']);
 });
 
 gulp.task('default', ['watch', 'lint']);

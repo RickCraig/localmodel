@@ -69,12 +69,14 @@ var matchQuery = function(data, query) {
     return query.test(data);
   }
 
-  // Query using string or number
+  // Query using string, number or boolean
   if (typeof query === 'string' ||
-    typeof query === 'number') {
+    typeof query === 'number' ||
+    typeof query === 'boolean') {
       return data === query;
     }
 
+  // Handle object
   if (typeof query === 'object') {
     return handleQueryObject(data, query);
   }

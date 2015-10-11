@@ -26,7 +26,7 @@ var LocalDocument = function(data, schema) {
 
     property = LocalDocument.convert(key, property, schema.schema);
 
-    if (property) {
+    if (typeof property !== 'undefined') {
       this._original[key] = property;
       this[key] = property;
     }
@@ -53,7 +53,7 @@ LocalDocument.convert = function(key, property, schema) {
     }
 
     // Set the default if it exists
-    if (schema[key].default && !property) {
+    if (typeof schema[key].default !== 'undefined' && !property) {
       property = schema[key].default;
     }
   } else {

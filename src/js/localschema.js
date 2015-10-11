@@ -48,7 +48,8 @@ LocalSchema.prototype.create = function(data) {
     }
 
     var value = data[key];
-    if (!value && this.schema[key].default) {
+    if (typeof value === 'undefined' &&
+      typeof this.schema[key].default !== 'undefined') {
       value = this.schema[key].default;
     }
     newEntry[key] = value;
@@ -157,7 +158,8 @@ LocalSchema.prototype.checkEntry = function(entry, query) {
 LocalSchema.prototype.find = function(query, isCount) {
   this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
-    return isCount ? this.indices.length : this.all();
+    var count = this.indices ? this.indices.length : 0;
+    return isCount ? count : this.all();
   }
 
   var results = isCount ? 0 : [];

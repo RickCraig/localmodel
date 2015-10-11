@@ -64,7 +64,8 @@ function merge(obj1, obj2) {
  * @returns {Boolean} true if it contains a LocalDocument
  */
 var containsArray = function(check) {
-  if (check instanceof Object || check instanceof Array) {
+  var isDate = check instanceof Date;
+  if (!isDate && (check instanceof Object || check instanceof Array)) {
     return true;
   }
 
@@ -305,6 +306,15 @@ LocalAggregate.prototype.group = function(data, group) {
  * @param {Boolean} first - true is first
  */
 LocalAggregate.prototype.get = function(entry, field, key, first) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
+  if (typeof field !== 'string') {
+    console.error('The first/last property must be a string');
+    return
+  }
+
   if (field && entry._group.length > 0) {
     var index = first ? 0 : entry._group.length-1;
     entry[key] = entry._group[index][field];
@@ -341,6 +351,10 @@ LocalAggregate.prototype.sum = function(entry, field, key) {
  * @param {String} key
  */
 LocalAggregate.prototype.avg = function(entry, field, key) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
   if (typeof field !== 'string') {
     console.error('The $avg field must be a string');
     return;
@@ -366,6 +380,10 @@ LocalAggregate.prototype.avg = function(entry, field, key) {
  * @param {Boolean} max - true if looking for max
  */
 LocalAggregate.prototype.minMax = function(entry, field, key, max) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
   if (typeof field !== 'string') {
     console.error('The $min & $max fields must be a string');
     return;
@@ -455,7 +473,7 @@ var LocalDocument = function(data, schema) {
 
     property = LocalDocument.convert(key, property, schema.schema);
 
-    if (property) {
+    if (typeof property !== 'undefined') {
       this._original[key] = property;
       this[key] = property;
     }
@@ -482,7 +500,7 @@ LocalDocument.convert = function(key, property, schema) {
     }
 
     // Set the default if it exists
-    if (schema[key].default && !property) {
+    if (typeof schema[key].default !== 'undefined' && !property) {
       property = schema[key].default;
     }
   } else {
@@ -728,7 +746,8 @@ LocalSchema.prototype.create = function(data) {
     }
 
     var value = data[key];
-    if (!value && this.schema[key].default) {
+    if (typeof value === 'undefined' &&
+      typeof this.schema[key].default !== 'undefined') {
       value = this.schema[key].default;
     }
     newEntry[key] = value;
@@ -837,7 +856,8 @@ LocalSchema.prototype.checkEntry = function(entry, query) {
 LocalSchema.prototype.find = function(query, isCount) {
   this.indices = this.indices || getIndices(this.name, this.options);
   if (!query || isEmpty(query)) {
-    return isCount ? this.indices.length : this.all();
+    var count = this.indices ? this.indices.length : 0;
+    return isCount ? count : this.all();
   }
 
   var results = isCount ? 0 : [];
@@ -1055,12 +1075,14 @@ var matchQuery = function(data, query) {
     return query.test(data);
   }
 
-  // Query using string or number
+  // Query using string, number or boolean
   if (typeof query === 'string' ||
-    typeof query === 'number') {
+    typeof query === 'number' ||
+    typeof query === 'boolean') {
       return data === query;
     }
 
+  // Handle object
   if (typeof query === 'object') {
     return handleQueryObject(data, query);
   }
