@@ -1,6 +1,6 @@
 'use strict';
 
-/* jshint undef:true */
+/* jshint undef:false */
 
 /**
  * Aggregate constructor
@@ -62,12 +62,29 @@ LocalAggregate.prototype.createGroup = function(data, query) {
       for (var ag = 0; ag < totalGrouped; ag++) {
         var current = groupData[ag];
 
-        _this.get(current, group[key].$first, key, true);
-        _this.get(current, group[key].$last, key, false);
-        _this.sum(current, group[key].$sum, key);
-        _this.avg(current, group[key].$avg, key);
-        _this.minMax(current, group[key].$max, key, true);
-        _this.minMax(current, group[key].$min, key, false);
+        if (group[key].$first) {
+          _this.get(current, group[key].$first, key, true);
+        }
+
+        if (group[key].$last) {
+          _this.get(current, group[key].$last, key, false);
+        }
+
+        if (group[key].$sum) {
+          _this.sum(current, group[key].$sum, key);
+        }
+
+        if (group[key].$avg) {
+          _this.avg(current, group[key].$avg, key);
+        }
+
+        if (group[key].$max) {
+          _this.minMax(current, group[key].$max, key, true);
+        }
+
+        if (group[key].$min) {
+          _this.minMax(current, group[key].$min, key, false);
+        }
 
       } // End of grouped loop
     } // End of check for _id
@@ -111,13 +128,9 @@ LocalAggregate.prototype.group = function(data, group) {
  * @param {Boolean} first - true is first
  */
 LocalAggregate.prototype.get = function(entry, field, key, first) {
-  if(typeof field === 'undefined') {
-    return;
-  }
-
   if (typeof field !== 'string') {
     console.error('The first/last property must be a string');
-    return
+    return;
   }
 
   if (field && entry._group.length > 0) {
@@ -156,10 +169,6 @@ LocalAggregate.prototype.sum = function(entry, field, key) {
  * @param {String} key
  */
 LocalAggregate.prototype.avg = function(entry, field, key) {
-  if(typeof field === 'undefined') {
-    return;
-  }
-
   if (typeof field !== 'string') {
     console.error('The $avg field must be a string');
     return;
@@ -185,10 +194,6 @@ LocalAggregate.prototype.avg = function(entry, field, key) {
  * @param {Boolean} max - true if looking for max
  */
 LocalAggregate.prototype.minMax = function(entry, field, key, max) {
-  if(typeof field === 'undefined') {
-    return;
-  }
-
   if (typeof field !== 'string') {
     console.error('The $min & $max fields must be a string');
     return;

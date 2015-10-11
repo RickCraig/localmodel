@@ -1,6 +1,6 @@
 'use strict';
 
-/* jshint undef:true */
+/* jshint undef:false */
 
 /**
  * Local Schema constructor
