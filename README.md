@@ -583,7 +583,7 @@ gulp test
 ```
 
 ## Change Log
-v0.5.1
+v0.6.0
 - Fixed issue with find when nothing has been saved
 - Fixed falsy check for create default addition
 - Fixed falsy check on property in LocalDocument constructor

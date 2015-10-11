@@ -306,6 +306,15 @@ LocalAggregate.prototype.group = function(data, group) {
  * @param {Boolean} first - true is first
  */
 LocalAggregate.prototype.get = function(entry, field, key, first) {
+  if(typeof field === 'undefined') {
+    return;
+  }
+
+  if (typeof field !== 'string') {
+    console.error('The first/last property must be a string');
+    return
+  }
+
   if (field && entry._group.length > 0) {
     var index = first ? 0 : entry._group.length-1;
     entry[key] = entry._group[index][field];
