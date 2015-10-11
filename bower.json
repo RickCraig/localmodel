@@ -1,0 +1,32 @@
+{
+  "name": "localmodel",
+  "version": "0.6.0",
+  "homepage": "https://github.com/RickCraig/localmodel",
+  "authors": [
+    "Rick Craig <rick@spacerevolver.com>"
+  ],
+  "description": "A library to allow the utilization of localStorage and sessionStorage using models (inspired by mongoose/mongodb)",
+  "main": "dist/localmodel.min.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "localstorage",
+    "storage",
+    "localmodel",
+    "sessionstorage",
+    "sessions",
+    "models",
+    "model",
+    "mongoose",
+    "electron"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
