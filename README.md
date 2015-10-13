@@ -21,7 +21,7 @@ bower install localmodel
 ```
 And include it on the page
 ```html
-<script src="/bower_components/localmodel/dist/js/localmodel.min.js"></script>
+<script src="/bower_components/localmodel/dist/localmodel.min.js"></script>
 ```
 
 ## Usage
