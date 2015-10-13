@@ -3,6 +3,8 @@
 
 LocalModel allows you to use a simple model structure to utilise localstorage. Its based loosely on the basic functionality of [Mongoose for node](http://mongoosejs.com/).
 
+Note: Be aware that Web storage is limited in size, for more details see: https://en.wikipedia.org/wiki/Web_storage
+
 ## Status
 This library is currently ready for use. Feedback is welcomed, please leave an issue if you find any bugs, or have any suggestions that will improve the library.
 
