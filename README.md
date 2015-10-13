@@ -15,12 +15,6 @@ Download the repo and copy dist/js/localmodel.min.js into the relevant folder in
 <script src='/path/to/localmodel.min.js'></script>
 ```
 
-### CDN
-Include the following in your HTML:
-```html
-<script src="linktocdn"></script>
-```
-
 ### Bower
 ```
 bower install localmodel
